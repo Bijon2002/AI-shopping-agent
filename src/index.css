@@ -212,7 +212,7 @@ body,
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   background: var(--bg-base);
   font-family: var(--font-body);
   color: var(--text-primary);

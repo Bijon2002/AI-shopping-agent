@@ -85,9 +85,9 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
             : { background: 'var(--bubble-assistant-bg)', border: '1px solid var(--bubble-assistant-border)', color: 'var(--text-primary)', backdropFilter: 'blur(12px)' }
           }>
           {isUser ? (
-            <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+            <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
           ) : (
-            <div className="text-[13px] sm:text-sm leading-relaxed">{renderMarkdown(msg.text)}</div>
+            <div className="text-[13px] sm:text-sm leading-relaxed break-words">{renderMarkdown(msg.text)}</div>
           )}
         </div>
 

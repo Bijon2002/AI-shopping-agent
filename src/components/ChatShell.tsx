@@ -62,7 +62,7 @@ export default function ChatShell() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col relative overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+    <div className="h-full w-full flex flex-col relative overflow-hidden" style={{ background: 'var(--bg-base)' }}>
 
       {/* ═══ Video Background (welcome screen only) ═══ */}
       {isWelcome && (
