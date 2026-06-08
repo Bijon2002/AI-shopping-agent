@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function WhatsAppButton() {
   // 070 711 2266 converted to international format for wa.me

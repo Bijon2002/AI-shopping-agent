@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, Copy, Check, Wand2 } from 'lucide-react';
+import { Copy, Check, Wand2 } from 'lucide-react';
 
 interface Template {
   tag: string;

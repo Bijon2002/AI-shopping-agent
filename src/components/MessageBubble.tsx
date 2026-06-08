@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, CreditCard, CheckCircle } from 'lucide-react';
 import ProductCarousel from './ProductCarousel';
@@ -7,7 +8,7 @@ import type { Message } from '../types';
 function renderMarkdown(text: string) {
   if (!text) return null;
   const lines = text.split('\n');
-  const elements: JSX.Element[] = [];
+  const elements: ReactNode[] = [];
   let listBuffer: string[] = [];
   let listType: 'ul' | 'ol' | null = null;
 
@@ -41,8 +42,8 @@ function renderMarkdown(text: string) {
   return <div className="md-content">{elements}</div>;
 }
 
-function inlineMarkdown(text: string): (string | JSX.Element)[] {
-  const parts: (string | JSX.Element)[] = [];
+function inlineMarkdown(text: string): (string | ReactNode)[] {
+  const parts: (string | ReactNode)[] = [];
   const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)|(\[(.+?)\]\((.+?)\))/g;
   let lastIndex = 0; let match;
   while ((match = regex.exec(text)) !== null) {
