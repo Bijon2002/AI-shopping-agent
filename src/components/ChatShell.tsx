@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Sun, Moon, Heart } from 'lucide-react';
+import { ShoppingCart, Sun, Moon, Heart, Menu } from 'lucide-react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
+import WishlistDrawer from './WishlistDrawer';
+import HistoryDrawer from './HistoryDrawer';
 import { useStore } from '../store';
 import { useTheme } from './ThemeProvider';
 import { sendMessage } from '../lib/openrouter';
@@ -11,8 +13,9 @@ import { detectOccasion, getSystemContextNote } from '../lib/occasion-engine';
 
 export default function ChatShell() {
   const {
-    messages, addMessage, updateLastAssistant,
-    cart, cartOpen, setCartOpen, wishlist,
+    messages, addMessage, updateLastAssistant, clearMessages,
+    cart, cartOpen, setCartOpen, wishlist, wishlistOpen, setWishlistOpen,
+    historyOpen, setHistoryOpen,
     detectedOccasion, setDetectedOccasion
   } = useStore();
 
@@ -96,7 +99,10 @@ export default function ChatShell() {
 
       {/* ═══ Header ═══ */}
       <header className="flex-none px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between z-20 glass relative gradient-border-bottom">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <button 
+          onClick={() => { clearMessages(); setDetectedOccasion(null); }}
+          className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity text-left cursor-pointer focus:outline-none"
+        >
           <img src="/kado-logo.png" alt="KADO" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover shadow-xl animate-glow" />
           <div>
             <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">KADO</h1>
@@ -113,7 +119,7 @@ export default function ChatShell() {
               )}
             </div>
           </div>
-        </div>
+        </button>
 
         <div className="flex items-center gap-1 sm:gap-1.5">
           {/* Theme Toggle */}
@@ -126,9 +132,18 @@ export default function ChatShell() {
             </div>
           </button>
 
+          {/* History / Menu */}
+          <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
+            onClick={() => setHistoryOpen(true)}
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl theme-t"
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}>
+            <Menu size={16} />
+          </motion.button>
+          
           {/* Wishlist */}
           {wishlistCount > 0 && (
             <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
+              onClick={() => setWishlistOpen(true)}
               className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative theme-t"
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
               <Heart size={16} className="text-kado-pink" fill="#FF6B7D" />
@@ -159,6 +174,8 @@ export default function ChatShell() {
 
       <AnimatePresence>
         {cartOpen && <CartDrawer />}
+        {wishlistOpen && <WishlistDrawer />}
+        {historyOpen && <HistoryDrawer />}
       </AnimatePresence>
     </div>
   );

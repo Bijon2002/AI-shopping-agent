@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import type { KaprukProduct } from '../types';
 
-export default function ProductCard({ product }: { product: KaprukProduct }) {
+export default function ProductCard({ product, onSend }: { product: KaprukProduct, onSend?: (t: string) => void }) {
   const addToCart = useStore((s) => s.addToCart);
   const toggleWishlist = useStore((s) => s.toggleWishlist);
   const isWishlisted = useStore((s) => s.isWishlisted);
@@ -23,8 +23,15 @@ export default function ProductCard({ product }: { product: KaprukProduct }) {
     toggleWishlist(product);
   };
 
+  const handleCardClick = () => {
+    if (onSend) {
+      onSend(`I like the ${product.name} (Product ID: ${product.id}).`);
+    }
+  };
+
   return (
     <motion.div
+      onClick={handleCardClick}
       whileHover={{ y: -6, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}

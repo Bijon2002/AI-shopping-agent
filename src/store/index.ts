@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import type { KaprukProduct, Message, CartItem } from '../types'
+import { persist } from 'zustand/middleware'
+import type { KaprukProduct, Message, CartItem, ChatSession } from '../types'
 
 interface KadoStore {
   // Chat
@@ -7,6 +8,14 @@ interface KadoStore {
   addMessage: (msg: Message) => void
   updateLastAssistant: (text: string, products?: KaprukProduct[], payLink?: string, orderNumber?: string) => void
   clearMessages: () => void
+
+  // History
+  sessions: ChatSession[]
+  activeSessionId: string | null
+  historyOpen: boolean
+  setHistoryOpen: (open: boolean) => void
+  loadSession: (id: string) => void
+  deleteSession: (id: string) => void
   
   // Cart
   cart: CartItem[]
@@ -19,8 +28,10 @@ interface KadoStore {
   
   // Wishlist
   wishlist: KaprukProduct[]
+  wishlistOpen: boolean
   toggleWishlist: (p: KaprukProduct) => void
   isWishlisted: (id: string) => boolean
+  setWishlistOpen: (open: boolean) => void
   
   // Checkout
   payLink: string | null
@@ -43,25 +54,70 @@ function saveWishlist(items: KaprukProduct[]) {
   try { localStorage.setItem('kado-wishlist', JSON.stringify(items)); } catch {}
 }
 
-export const useStore = create<KadoStore>((set, get) => ({
-  messages: [],
-  addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
-  updateLastAssistant: (text, products, payLink, orderNumber) => set((s) => {
-    const msgs = [...s.messages]
-    const last = msgs.findLastIndex((m) => m.role === 'assistant')
-    if (last >= 0) {
-      msgs[last] = { 
-        ...msgs[last], 
-        text, 
-        ...(products !== undefined && { products }),
-        ...(payLink !== undefined && { payLink }),
-        ...(orderNumber !== undefined && { orderNumber })
-      }
-    }
-    return { messages: msgs }
-  }),
-  clearMessages: () => set({ messages: [] }),
-  
+export const useStore = create<KadoStore>()(
+  persist(
+    (set, get) => ({
+      messages: [],
+      addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
+      updateLastAssistant: (text, products, payLink, orderNumber) => set((s) => {
+        const msgs = [...s.messages]
+        const last = msgs.findLastIndex((m) => m.role === 'assistant')
+        if (last >= 0) {
+          msgs[last] = { 
+            ...msgs[last], 
+            text, 
+            ...(products !== undefined && { products }),
+            ...(payLink !== undefined && { payLink }),
+            ...(orderNumber !== undefined && { orderNumber })
+          }
+        }
+        return { messages: msgs }
+      }),
+      clearMessages: () => set((s) => {
+        // Before clearing, save the current session if it has user messages
+        const hasUserMessage = s.messages.some(m => m.role === 'user')
+        if (hasUserMessage) {
+          const newSession: ChatSession = {
+            id: s.activeSessionId || Date.now().toString(),
+            title: s.messages.find(m => m.role === 'user')?.text.slice(0, 30) + '...' || 'New Chat',
+            date: Date.now(),
+            messages: [...s.messages]
+          }
+          
+          const existingSessionIndex = s.sessions.findIndex(sess => sess.id === newSession.id)
+          let newSessions = [...s.sessions]
+          
+          if (existingSessionIndex >= 0) {
+             newSessions[existingSessionIndex] = newSession
+          } else {
+             newSessions.push(newSession)
+          }
+
+          return { 
+            messages: [], 
+            activeSessionId: null,
+            sessions: newSessions
+          }
+        }
+        return { messages: [], activeSessionId: null }
+      }),
+
+      sessions: [],
+      activeSessionId: null,
+      historyOpen: false,
+      setHistoryOpen: (open) => set({ historyOpen: open }),
+      loadSession: (id) => set((s) => {
+        const session = s.sessions.find(sess => sess.id === id)
+        if (session) {
+          return { messages: session.messages, activeSessionId: id, historyOpen: false }
+        }
+        return s
+      }),
+      deleteSession: (id) => set((s) => ({
+        sessions: s.sessions.filter(sess => sess.id !== id),
+        ...(s.activeSessionId === id ? { activeSessionId: null, messages: [] } : {})
+      })),
+      
   cart: [],
   cartOpen: false,
   addToCart: (product, qty = 1) => set((s) => {
@@ -88,6 +144,7 @@ export const useStore = create<KadoStore>((set, get) => ({
   
   // Wishlist
   wishlist: loadWishlist(),
+  wishlistOpen: false,
   toggleWishlist: (product) => set((s) => {
     const exists = s.wishlist.some((p) => p.id === product.id);
     const next = exists
@@ -97,10 +154,22 @@ export const useStore = create<KadoStore>((set, get) => ({
     return { wishlist: next };
   }),
   isWishlisted: (id) => get().wishlist.some((p) => p.id === id),
+  setWishlistOpen: (open) => set({ wishlistOpen: open }),
   
   payLink: null,
   setPayLink: (url) => set({ payLink: url }),
   
   detectedOccasion: null,
   setDetectedOccasion: (occ) => set({ detectedOccasion: occ }),
-}))
+    }),
+    {
+      name: 'kado-storage', // name of the item in the storage (must be unique)
+      partialize: (state) => ({ 
+        sessions: state.sessions, 
+        activeSessionId: state.activeSessionId, 
+        messages: state.messages,
+        cart: state.cart // let's persist cart too!
+      }), // only persist these fields
+    }
+  )
+)

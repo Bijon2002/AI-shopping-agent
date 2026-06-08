@@ -57,7 +57,7 @@ function inlineMarkdown(text: string): (string | JSX.Element)[] {
   return parts.length > 0 ? parts : [text];
 }
 
-export default function MessageBubble({ msg }: { msg: Message }) {
+export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: (t: string) => void }) {
   const isUser = msg.role === 'user';
 
   return (
@@ -125,7 +125,7 @@ export default function MessageBubble({ msg }: { msg: Message }) {
         )}
 
         {/* Products */}
-        {msg.products && msg.products.length > 0 && <ProductCarousel products={msg.products} />}
+        {msg.products && msg.products.length > 0 && <ProductCarousel products={msg.products} onSend={onSend} />}
       </div>
     </motion.div>
   );

@@ -132,7 +132,7 @@ export default function MessageList({
           </div>
 
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} msg={msg} />
+            <MessageBubble key={msg.id} msg={msg} onSend={onSend} />
           ))}
 
           {/* Loading */}

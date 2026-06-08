@@ -17,8 +17,22 @@ export default function ChatInput({
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SR) {
       const rec = new SR();
-      rec.continuous = false; rec.interimResults = false; rec.lang = 'en-US';
-      rec.onresult = (e: any) => { const t = e.results[0][0].transcript; if (t) setText(p => (p + ' ' + t).trim()); };
+      rec.continuous = false; 
+      rec.interimResults = false; 
+      rec.lang = 'en-US';
+      rec.onresult = (e: any) => { 
+        const t = e.results[0][0].transcript; 
+        if (t) setText(p => (p + ' ' + t).trim()); 
+      };
+      rec.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          alert("Microphone access denied. Please allow microphone permissions in your browser.");
+        } else if (event.error === 'network') {
+          alert("Network error: The browser's speech recognition service is unreachable. This usually happens if a firewall/adblocker blocks it, or if you aren't using Chrome/Edge.");
+        }
+      };
       rec.onend = () => setIsListening(false);
       recognitionRef.current = rec;
     }

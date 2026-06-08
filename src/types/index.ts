@@ -19,6 +19,13 @@ export interface Message {
   isSystem?: boolean;
 }
 
+export interface ChatSession {
+  id: string;
+  title: string;
+  date: number;
+  messages: Message[];
+}
+
 export interface CartItem {
   product: KaprukProduct;
   qty: number;

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 import type { KaprukProduct } from '../types';
 
-export default function ProductCarousel({ products }: { products: KaprukProduct[] }) {
+export default function ProductCarousel({ products, onSend }: { products: KaprukProduct[], onSend?: (t: string) => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -39,8 +39,8 @@ export default function ProductCarousel({ products }: { products: KaprukProduct[
         className="flex gap-3 overflow-x-auto pb-3 scroll-smooth snap-x pr-4"
         style={{ scrollbarWidth: 'none' }}
       >
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
+        {products.map((p, idx) => (
+          <ProductCard key={p.id || `product-${idx}`} product={p} onSend={onSend} />
         ))}
       </div>
 
