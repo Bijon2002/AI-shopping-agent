@@ -86,7 +86,7 @@ export default function ChatShell() {
         <div className="aurora-bg">
           <div className="aurora-orb"
             style={{ width: '500px', height: '500px', top: '-15%', left: '15%',
-              background: isDark ? 'radial-gradient(circle, rgba(255,107,43,0.1) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(255,107,43,0.06) 0%, transparent 70%)',
+              background: isDark ? 'radial-gradient(circle, rgba(139,0,0,0.1) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(139,0,0,0.06) 0%, transparent 70%)',
               animationDuration: '8s',
             }} />
           <div className="aurora-orb"
