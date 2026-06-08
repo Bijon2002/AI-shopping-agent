@@ -38,9 +38,9 @@ export interface OrderPayload {
     address: string;
     date: string;
   };
-  sender?: {
+  sender: {
     name: string;
-    email: string;
+    anonymous?: boolean;
   };
   gift_message?: string;
 }

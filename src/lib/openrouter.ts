@@ -40,11 +40,11 @@ export async function sendMessage(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://bijon.dev',
-        'X-Title': 'KADO — Smart Sri Lankan Shopping',
+        'HTTP-Referer': 'https://bijonn.pages.dev',
+        'X-Title': 'KADO - Smart Sri Lankan Shopping',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-sonnet',
+        model: 'openai/gpt-4o-mini',
         messages: currentMessages,
         tools: KAPRUKA_TOOLS,
         tool_choice: 'auto'
@@ -117,72 +117,13 @@ export async function sendMessage(
 
       currentMessages.push(...toolResults as any);
     } else {
-      // Final response! We stream it if stream is set, or we can just send it.
-      // Since we didn't stream this final call, let's stream it by requesting a stream completion,
-      // or simply output the text directly. 
-      // Let's call a streaming completion to make the text type out in real time
-      // This gives the premium "feels alive" experience
-      await streamText(currentMessages, apiKey, onChunk);
+      const content = assistantMessage.content || "";
+      for (const char of content) {
+        onChunk(char);
+        await new Promise(resolve => setTimeout(resolve, 4));
+      }
       keepRunning = false;
     }
   }
 }
 
-async function streamText(
-  messages: any[],
-  apiKey: string,
-  onChunk: (text: string) => void
-) {
-  const res = await fetch(OPENROUTER_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://bijon.dev',
-      'X-Title': 'KADO — Smart Sri Lankan Shopping',
-    },
-    body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
-      messages: messages,
-      stream: true
-    })
-  });
-
-  if (!res.ok) {
-    onChunk("Aney machan, something went wrong while streaming the response.");
-    return;
-  }
-
-  const reader = res.body?.getReader();
-  const decoder = new TextDecoder('utf-8');
-  if (!reader) return;
-
-  let buffer = '';
-  let done = false;
-
-  while (!done) {
-    const { value, done: doneReading } = await reader.read();
-    done = doneReading;
-    if (value) {
-      buffer += decoder.decode(value, { stream: !done });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const cleaned = line.replace(/^data: /, '').trim();
-        if (cleaned === '[DONE]') continue;
-        if (cleaned) {
-          try {
-            const parsed = JSON.parse(cleaned);
-            const content = parsed.choices?.[0]?.delta?.content || '';
-            if (content) {
-              onChunk(content);
-            }
-          } catch (e) {
-            // Ignore parse errors from incomplete lines
-          }
-        }
-      }
-    }
-  }
-}

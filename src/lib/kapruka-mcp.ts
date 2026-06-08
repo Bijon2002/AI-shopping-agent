@@ -1,27 +1,29 @@
-import type { OrderPayload } from '../types';
+import type { OrderPayload, KaprukProduct } from '../types';
 
-const MCP_URL = import.meta.env.VITE_KAPRUKA_MCP_URL || 'https://mcp.kapruka.com/mcp';
+// All MCP calls go through our Vite Node.js plugin (no CORS, session managed there)
+const API_BASE = '/api/mcp-call';
 
-// Generic MCP tool caller
-async function callMCPTool(toolName: string, params: Record<string, unknown>) {
-  const body = {
-    jsonrpc: '2.0',
-    id: Date.now(),
-    method: 'tools/call',
-    params: { name: toolName, arguments: params },
-  };
+async function callMCPTool(toolName: string, args: Record<string, unknown>) {
+  console.debug('[MCP] →', toolName, args);
 
-  const res = await fetch(MCP_URL, {
+  const res = await fetch(API_BASE, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ tool: toolName, args }),
   });
 
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
 
-  // Parse markdown content or JSON content from MCP response
-  const content = data.result?.content ?? [];
+  if (!res.ok || data?.error) {
+    const msg = typeof data?.error === 'string' ? data.error : JSON.stringify(data?.error);
+    console.error('[MCP] Error:', msg);
+    throw new Error(`MCP error: ${msg}`);
+  }
+
+  console.debug('[MCP] ←', toolName, data);
+
+  // MCP result is content array of typed blocks
+  const content: any[] = data?.result?.content ?? [];
   const text = content
     .filter((c: any) => c.type === 'text')
     .map((c: any) => c.text)
@@ -30,11 +32,15 @@ async function callMCPTool(toolName: string, params: Record<string, unknown>) {
   try {
     return JSON.parse(text);
   } catch {
-    return text;
+    return text || data?.result;
   }
 }
 
-export const searchProducts = (
+// ── Public API ────────────────────────────────────────────────────────────────
+// The Kapruka MCP server uses FastMCP. ALL functions are defined with a `params: Model` signature,
+// which means EVERY tool call must wrap its parameters inside a `{ params: { ... } }` object.
+
+export const searchProducts = async (
   q: string,
   opts?: {
     category?: string;
@@ -43,22 +49,77 @@ export const searchProducts = (
     in_stock_only?: boolean;
     limit?: number;
   }
-) => callMCPTool('kapruka_search_products', { q, ...opts });
+) => {
+  // Always request 'json' format so we get structured products we can render in UI
+  const raw = await callMCPTool('kapruka_search_products', {
+    params: {
+      q,
+      ...opts,
+      response_format: 'json'
+    }
+  });
 
-export const getProduct = (product_id: string) =>
-  callMCPTool('kapruka_get_product', { product_id });
+  // Map the raw results to our internal KaprukProduct format
+  const products: KaprukProduct[] = (raw?.results ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price?.amount ?? 0,
+    in_stock: p.in_stock ?? false,
+    image_url: p.image_url ?? undefined,
+    category: p.category?.name ?? undefined,
+    description: p.summary ?? undefined,
+    rating: p.rating ?? undefined,
+  }));
+
+  return { products };
+};
+
+export const getProduct = async (product_id: string) => {
+  const raw = await callMCPTool('kapruka_get_product', {
+    params: {
+      product_id,
+      response_format: 'json'
+    }
+  });
+
+  if (typeof raw === 'string') return raw;
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    price: raw.price?.amount ?? 0,
+    in_stock: raw.in_stock ?? false,
+    image_url: raw.images?.[0] ?? undefined,
+    category: raw.category?.name ?? undefined,
+    description: raw.description ?? raw.summary ?? undefined,
+  };
+};
 
 export const listCategories = () =>
-  callMCPTool('kapruka_list_categories', {});
+  callMCPTool('kapruka_list_categories', {
+    params: {}
+  });
 
 export const checkDelivery = (city: string, date: string, product_id?: string) =>
-  callMCPTool('kapruka_check_delivery', { city, delivery_date: date, product_id });
+  callMCPTool('kapruka_check_delivery', {
+    params: {
+      city,
+      delivery_date: date,
+      ...(product_id ? { product_id } : {}),
+    }
+  });
 
 export const listDeliveryCities = (query: string) =>
-  callMCPTool('kapruka_list_delivery_cities', { query });
+  callMCPTool('kapruka_list_delivery_cities', {
+    params: { query }
+  });
 
 export const createOrder = (payload: OrderPayload) =>
-  callMCPTool('kapruka_create_order', payload as unknown as Record<string, unknown>);
+  callMCPTool('kapruka_create_order', {
+    params: payload as unknown as Record<string, unknown>
+  });
 
 export const trackOrder = (order_number: string) =>
-  callMCPTool('kapruka_track_order', { order_number });
+  callMCPTool('kapruka_track_order', {
+    params: { order_number }
+  });

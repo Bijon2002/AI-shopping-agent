@@ -91,10 +91,10 @@ export const KAPRUKA_TOOLS = [
             type: 'object',
             description: 'Sender information',
             properties: {
-              name: { type: 'string' },
-              email: { type: 'string' },
+              name: { type: 'string', description: 'Sender name on the gift card' },
+              anonymous: { type: 'boolean', description: 'If true, shows Anonymous instead of sender name' },
             },
-            required: ['name', 'email'],
+            required: ['name'],
           },
           gift_message: { type: 'string', description: 'Optional personal note for card' },
         },

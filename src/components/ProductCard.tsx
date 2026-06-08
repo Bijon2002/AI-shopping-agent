@@ -1,73 +1,98 @@
 import { motion } from 'framer-motion';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star, Check, Heart } from 'lucide-react';
+import { useState } from 'react';
 import { useStore } from '../store';
 import type { KaprukProduct } from '../types';
 
 export default function ProductCard({ product }: { product: KaprukProduct }) {
   const addToCart = useStore((s) => s.addToCart);
+  const toggleWishlist = useStore((s) => s.toggleWishlist);
+  const isWishlisted = useStore((s) => s.isWishlisted);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const wishlisted = isWishlisted(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 1500);
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleWishlist(product);
   };
 
   return (
     <motion.div
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ duration: 0.2 }}
-      className="w-48 flex-none bg-kado-card border border-white/5 rounded-2xl overflow-hidden cursor-pointer group shadow-xl"
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      className="w-[150px] sm:w-[180px] flex-none rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group snap-start theme-t"
+      style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}
     >
-      {/* Product image */}
-      <div className="relative h-40 bg-kado-surface overflow-hidden">
+      {/* Image */}
+      <div className="relative h-36 sm:h-44 overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
         {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          <img src={product.image_url} alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-4xl">{getCategoryEmoji(product.category)}</span>
+          <div className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl">
+            {getCategoryEmoji(product.category)}
           </div>
         )}
 
-        {/* Price badge */}
-        <div className="absolute top-2 right-2 bg-kado-dark/80 backdrop-blur-sm rounded-full px-2 py-0.5">
-          <span className="text-kado-gold text-xs font-bold">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Price */}
+        <div className="absolute top-2 right-2 glass rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1">
+          <span className="text-kado-gold text-[10px] sm:text-[11px] font-bold drop-shadow-md">
             LKR {product.price?.toLocaleString()}
           </span>
         </div>
 
-        {/* Out of stock overlay */}
-        {!product.in_stock && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <span className="text-white/60 text-xs font-bold tracking-wider">OUT OF STOCK</span>
+        {/* Wishlist */}
+        <motion.button whileTap={{ scale: 0.75 }} onClick={handleWishlist}
+          className="absolute top-2 left-2 p-1 sm:p-1.5 rounded-full glass transition-all duration-300">
+          <Heart size={12} fill={wishlisted ? '#FF6B7D' : 'none'}
+            className={wishlisted ? 'text-kado-pink' : 'text-white/80'} />
+        </motion.button>
+
+        {/* Stock */}
+        {product.in_stock ? (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold glass text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> In Stock
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+            <span className="text-white/70 text-[10px] sm:text-xs font-bold tracking-wider uppercase">Out of Stock</span>
           </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="p-3 space-y-2 flex flex-col justify-between h-[100px]">
+      <div className="p-2.5 sm:p-3 space-y-2 flex flex-col justify-between h-[90px] sm:h-[105px]">
         <div>
-          <p className="text-white text-xs font-medium leading-tight line-clamp-2">
+          <p className="text-[11px] sm:text-xs font-semibold leading-tight line-clamp-2" style={{ color: 'var(--text-primary)' }}>
             {product.name}
           </p>
           {product.rating && (
-            <div className="flex items-center gap-1 mt-1">
-              <Star size={10} className="text-kado-gold fill-kado-gold" />
-              <span className="text-kado-muted text-xs">{product.rating}</span>
+            <div className="flex items-center gap-0.5 mt-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={8}
+                  className={i < Math.round(product.rating!) ? 'text-kado-gold fill-kado-gold' : 'text-kado-muted/30'} />
+              ))}
+              <span className="text-[9px] ml-0.5" style={{ color: 'var(--text-muted)' }}>{product.rating}</span>
             </div>
           )}
         </div>
 
-        <button
-          onClick={handleAdd}
-          disabled={!product.in_stock}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-kado-orange/10 hover:bg-kado-orange/20 border border-kado-orange/30 hover:border-kado-orange/60 rounded-lg transition-all duration-200 text-kado-orange text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <ShoppingCart size={12} />
-          Add to Cart
-        </button>
+        <motion.button whileTap={{ scale: 0.92 }} onClick={handleAdd} disabled={!product.in_stock}
+          className={`w-full flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 disabled:opacity-25 ${
+            addedToCart ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'btn-primary rounded-lg'
+          }`}>
+          {addedToCart ? <><Check size={11} /> Added!</> : <><ShoppingCart size={11} className="relative z-10" /> <span className="relative z-10">Add to Cart</span></>}
+        </motion.button>
       </div>
     </motion.div>
   );
@@ -75,13 +100,8 @@ export default function ProductCard({ product }: { product: KaprukProduct }) {
 
 function getCategoryEmoji(cat?: string): string {
   const map: Record<string, string> = {
-    cakes: '🎂',
-    flowers: '💐',
-    electronics: '⚡',
-    groceries: '🛒',
-    clothing: '👕',
-    books: '📚',
-    toys: '🧸',
+    cakes: '🎂', flowers: '💐', electronics: '⚡', groceries: '🛒',
+    clothing: '👕', books: '📚', toys: '🧸',
   };
   return map[cat?.toLowerCase() ?? ''] ?? '🎁';
 }
