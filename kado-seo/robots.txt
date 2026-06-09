@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Priority crawl for main page
+Sitemap: https://ai-shopping-agent.pages.dev/sitemap.xml
+
+# Block unnecessary paths
+Disallow: /api/
+Disallow: /*.json$
