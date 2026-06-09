@@ -46,7 +46,7 @@ export default function DeliveryCalendar({
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
-          <Calendar size={14} className="text-kado-orange" /> Delivery Date
+          <Calendar size={14} className="text-Kapruka-orange" /> Delivery Date
         </div>
         {perishable && (
           <span className="flex items-center gap-1 text-[9px] text-amber-400 font-bold px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
@@ -57,7 +57,7 @@ export default function DeliveryCalendar({
 
       {loading ? (
         <div className="flex items-center justify-center py-6 rounded-2xl" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-          <Loader2 size={18} className="text-kado-orange animate-spin" />
+          <Loader2 size={18} className="text-Kapruka-orange animate-spin" />
           <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>Checking schedule…</span>
         </div>
       ) : (
@@ -86,7 +86,7 @@ export default function DeliveryCalendar({
                 </span>
                 <span className="text-xs font-display font-bold mt-0.5">{format(d.obj, 'd')}</span>
                 {d.ok && d.cost !== undefined && (
-                  <span className={`text-[7px] mt-0.5 ${sel ? 'text-white/70' : 'text-kado-gold'}`}>
+                  <span className={`text-[7px] mt-0.5 ${sel ? 'text-white/70' : 'text-Kapruka-gold'}`}>
                     {d.cost > 0 ? `LKR ${d.cost}` : 'Free'}
                   </span>
                 )}

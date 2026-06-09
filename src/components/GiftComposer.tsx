@@ -28,7 +28,7 @@ export default function GiftComposer({ value, onChange }: { value: string; onCha
   return (
     <div className="rounded-2xl p-4 space-y-3 theme-t" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
       <div className="flex items-center gap-2 text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
-        <Wand2 size={14} className="text-kado-orange" />
+        <Wand2 size={14} className="text-Kapruka-orange" />
         Gift Card Message
       </div>
 

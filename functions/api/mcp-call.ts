@@ -14,7 +14,7 @@ async function initializeSession(context: any) {
       params: {
         protocolVersion: '2025-03-26',
         capabilities: {},
-        clientInfo: { name: 'KADO', version: '1.0.0' },
+        clientInfo: { name: 'Kapruka', version: '1.0.0' },
       },
     }),
   });

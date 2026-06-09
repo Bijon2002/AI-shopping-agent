@@ -2,7 +2,7 @@
 export default function WhatsAppButton() {
   // 070 711 2266 converted to international format for wa.me
   const phoneNumber = '94707112266';
-  const message = 'Hello, I need some help with KADO AI Shopping!';
+  const message = 'Hello, I need some help with Kapruka AI Shopping!';
   const waLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (

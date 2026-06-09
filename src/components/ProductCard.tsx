@@ -53,7 +53,7 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
 
         {/* Price */}
         <div className="absolute top-2 right-2 glass rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1">
-          <span className="text-kado-gold text-[10px] sm:text-[11px] font-bold drop-shadow-md">
+          <span className="text-Kapruka-gold text-[10px] sm:text-[11px] font-bold drop-shadow-md">
             LKR {product.price?.toLocaleString()}
           </span>
         </div>
@@ -62,7 +62,7 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
         <motion.button whileTap={{ scale: 0.75 }} onClick={handleWishlist}
           className="absolute top-2 left-2 p-1 sm:p-1.5 rounded-full glass transition-all duration-300">
           <Heart size={12} fill={wishlisted ? '#FF6B7D' : 'none'}
-            className={wishlisted ? 'text-kado-pink' : 'text-white/80'} />
+            className={wishlisted ? 'text-Kapruka-pink' : 'text-white/80'} />
         </motion.button>
 
         {/* Stock */}
@@ -87,7 +87,7 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
             <div className="flex items-center gap-0.5 mt-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} size={8}
-                  className={i < Math.round(product.rating!) ? 'text-kado-gold fill-kado-gold' : 'text-kado-muted/30'} />
+                  className={i < Math.round(product.rating!) ? 'text-Kapruka-gold fill-Kapruka-gold' : 'text-Kapruka-muted/30'} />
               ))}
               <span className="text-[9px] ml-0.5" style={{ color: 'var(--text-muted)' }}>{product.rating}</span>
             </div>

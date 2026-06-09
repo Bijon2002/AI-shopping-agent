@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   KADO — Premium Design System
+   Kapruka — Premium Design System
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  --color-kado-orange: #8B0000;
-  --color-kado-gold: #F5C518;
-  --color-kado-accent: #FF8F5C;
-  --color-kado-pink: #FF6B7D;
-  --color-kado-purple: #A855F7;
-  --color-kado-blue: #3B82F6;
-  --color-kado-emerald: #10B981;
+  --color-Kapruka-orange: #8B0000;
+  --color-Kapruka-gold: #F5C518;
+  --color-Kapruka-accent: #FF8F5C;
+  --color-Kapruka-pink: #FF6B7D;
+  --color-Kapruka-purple: #A855F7;
+  --color-Kapruka-blue: #3B82F6;
+  --color-Kapruka-emerald: #10B981;
 
-  --color-kado-dark: #09090B;
-  --color-kado-surface: #18181B;
-  --color-kado-card: #27272A;
-  --color-kado-muted: #71717A;
+  --color-Kapruka-dark: #09090B;
+  --color-Kapruka-surface: #18181B;
+  --color-Kapruka-card: #27272A;
+  --color-Kapruka-muted: #71717A;
 
   --font-display: "Syne", system-ui, sans-serif;
   --font-body: "DM Sans", system-ui, sans-serif;

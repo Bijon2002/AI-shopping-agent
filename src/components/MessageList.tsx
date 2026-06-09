@@ -58,7 +58,7 @@ export default function MessageList({
                   opacity: 0.3,
                 }}
               />
-              <img src="/kado-logo.png" alt="KADO"
+              <img src="/kado-logo.png" alt="Kapruka"
                 className="relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl object-cover shadow-2xl z-10"
               />
               <motion.div
@@ -78,7 +78,7 @@ export default function MessageList({
               Ayubowan!
             </h2>
             <h3 className="font-display font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>
-              I am <span className="gradient-text">KADO</span>, your Sri Lankan shopping companion
+              I am <span className="gradient-text">Kapruka</span>, your Sri Lankan shopping companion
             </h3>
             <p className="text-[11px] sm:text-xs leading-relaxed max-w-xs sm:max-w-sm mx-auto" style={{ color: 'var(--text-secondary)' }}>
               Tell me what you need — gifts, cakes, flowers, electronics — and I'll find the perfect item on Kapruka & deliver it anywhere in Sri Lanka! 🇱🇰
@@ -140,7 +140,7 @@ export default function MessageList({
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2 sm:gap-3 mb-6">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-none animate-glow overflow-hidden"
                 style={{ border: '1px solid rgba(255,107,43,0.25)' }}>
-                <img src="/kado-logo.png" alt="KADO" className="w-full h-full object-cover" />
+                <img src="/kado-logo.png" alt="Kapruka" className="w-full h-full object-cover" />
               </div>
               <div className="rounded-2xl rounded-tl-sm px-4 sm:px-5 py-3 sm:py-4 max-w-[75%] sm:max-w-[70%] theme-t"
                 style={{ background: 'var(--bubble-assistant-bg)', border: '1px solid var(--bubble-assistant-border)' }}>
@@ -149,12 +149,12 @@ export default function MessageList({
                     <motion.span key={i}
                       animate={{ y: [0, -6, 0] }}
                       transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
-                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-kado-orange" />
+                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-Kapruka-orange" />
                   ))}
                 </div>
                 {currentToolName && (
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-[9px] sm:text-[10px] text-kado-orange font-bold uppercase tracking-wider block mt-2">
+                    className="text-[9px] sm:text-[10px] text-Kapruka-orange font-bold uppercase tracking-wider block mt-2">
                     ⚡ {currentToolName.replace('kapruka_', '').replaceAll('_', ' ')}…
                   </motion.span>
                 )}

@@ -9,6 +9,7 @@ export async function sendMessage(
   onProducts: (products: any[]) => void,
   onPayLink: (url: string) => void,
   onOrderConfirm: (orderNumber: string) => void,
+  onTracking: (trackingData: any) => void,
   onToolStart: (toolName: string) => void,
   onToolEnd: (toolName: string, result: any) => void
 ) {
@@ -41,7 +42,7 @@ export async function sendMessage(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': 'https://bijonn.pages.dev',
-        'X-Title': 'KADO - Smart Sri Lankan Shopping',
+        'X-Title': 'Kapruka - Smart Sri Lankan Shopping',
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o-mini',
@@ -98,6 +99,9 @@ export async function sendMessage(
             }
           } else if (name === 'kapruka_track_order') {
             result = await MCP.trackOrder(args.order_number);
+            if (result && !result.error) {
+              onTracking(result);
+            }
           } else {
             result = { error: `Tool ${name} not found` };
           }

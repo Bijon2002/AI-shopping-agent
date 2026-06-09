@@ -22,6 +22,7 @@ export default function ChatShell() {
   const { isDark, toggleTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolName, setCurrentToolName] = useState<string | null>(null);
+  const [voiceOutput, setVoiceOutput] = useState(false);
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const wishlistCount = wishlist.length;
@@ -49,6 +50,7 @@ export default function ChatShell() {
         (products) => { updateLastAssistant(acc, products); },
         (payUrl) => { updateLastAssistant(acc, undefined, payUrl); },
         (orderNo) => { updateLastAssistant(acc, undefined, undefined, orderNo); },
+        (trackingData) => { updateLastAssistant(acc, undefined, undefined, undefined, trackingData); },
         (toolName) => { setCurrentToolName(toolName); },
         () => { setCurrentToolName(null); }
       );
@@ -58,6 +60,15 @@ export default function ChatShell() {
     } finally {
       setIsLoading(false);
       setCurrentToolName(null);
+      if (voiceOutput && acc.trim()) {
+        const u = new SpeechSynthesisUtterance(acc.trim());
+        // Try to find a good voice (maybe an English/Asian one if available)
+        const voices = window.speechSynthesis.getVoices();
+        const voice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-GB')) || voices[0];
+        if (voice) u.voice = voice;
+        u.rate = 1.1; // Speak slightly faster
+        window.speechSynthesis.speak(u);
+      }
     }
   };
 
@@ -103,13 +114,13 @@ export default function ChatShell() {
           onClick={() => { clearMessages(); setDetectedOccasion(null); }}
           className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity text-left cursor-pointer focus:outline-none"
         >
-          <img src="/kado-logo.png" alt="KADO" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover shadow-xl animate-glow" />
+          <img src="/kado-logo.png" alt="Kapruka" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover shadow-xl animate-glow" />
           <div>
-            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">KADO</h1>
+            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">Kapruka</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               {detectedOccasion ? (
                 <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-kado-orange/15 text-kado-orange border border-kado-orange/20">
+                  className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-Kapruka-orange/15 text-Kapruka-orange border border-Kapruka-orange/20">
                   {detectedOccasion} Mode
                 </motion.span>
               ) : (
@@ -122,14 +133,16 @@ export default function ChatShell() {
         </button>
 
         <div className="flex items-center gap-1 sm:gap-1.5">
-          {/* Theme Toggle */}
-          <button onClick={toggleTheme}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-500 hover:scale-110 active:scale-90 theme-t"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-            <div className="relative w-4 h-4">
-              <Sun size={16} className={`absolute inset-0 transition-all duration-500 text-amber-400 ${isDark ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}`} />
-              <Moon size={16} className={`absolute inset-0 transition-all duration-500 text-blue-300 ${isDark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} />
-            </div>
+
+          {/* TTS Toggle */}
+          <button onClick={() => setVoiceOutput(!voiceOutput)}
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
+            style={{ 
+              background: voiceOutput ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)', 
+              border: '1px solid var(--border-default)', 
+              color: voiceOutput ? 'var(--Kapruka-orange)' : 'var(--text-muted)' 
+            }}>
+            {voiceOutput ? <span title="Voice Output On">🔊</span> : <span title="Voice Output Off">🔈</span>}
           </button>
 
           {/* History / Menu */}
@@ -146,8 +159,8 @@ export default function ChatShell() {
               onClick={() => setWishlistOpen(true)}
               className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative theme-t"
               style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-              <Heart size={16} className="text-kado-pink" fill="#FF6B7D" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center text-[8px] font-bold bg-kado-pink text-white rounded-full">{wishlistCount}</span>
+              <Heart size={16} className="text-Kapruka-pink" fill="#FF6B7D" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center text-[8px] font-bold bg-Kapruka-pink text-white rounded-full">{wishlistCount}</span>
             </motion.button>
           )}
 
@@ -158,7 +171,7 @@ export default function ChatShell() {
             <ShoppingCart size={16} style={{ color: 'var(--text-primary)' }} />
             {cartCount > 0 && (
               <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                className="flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold bg-kado-orange text-white rounded-full min-w-[16px]">
+                className="flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold bg-Kapruka-orange text-white rounded-full min-w-[16px]">
                 {cartCount}
               </motion.span>
             )}

@@ -121,5 +121,5 @@ export const createOrder = (payload: OrderPayload) =>
 
 export const trackOrder = (order_number: string) =>
   callMCPTool('kapruka_track_order', {
-    params: { order_number }
+    params: { order_number, response_format: 'json' }
   });

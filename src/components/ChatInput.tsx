@@ -66,7 +66,7 @@ export default function ChatInput({
         {isListening && (
           <>
             <motion.span animate={{ scale: [1, 1.8], opacity: [0.5, 0] }} transition={{ duration: 1.2, repeat: Infinity }}
-              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-kado-orange" />
+              className="absolute inset-0 rounded-lg sm:rounded-xl border-2 border-Kapruka-orange" />
           </>
         )}
       </motion.button>
@@ -84,7 +84,7 @@ export default function ChatInput({
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
           disabled={disabled}
-          placeholder={disabled ? "KADO is thinking..." : "Type here machang..."}
+          placeholder={disabled ? "Kapruka is thinking..." : "Type here machang..."}
           className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors"
           style={{
             backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)',

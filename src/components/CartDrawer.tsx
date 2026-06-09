@@ -54,7 +54,7 @@ export default function CartDrawer() {
               {checkoutMode ? 'Checkout' : 'Cart'}
             </h2>
             {!checkoutMode && cart.length > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-kado-orange/15 text-kado-orange">
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-Kapruka-orange/15 text-Kapruka-orange">
                 {cart.length} {cart.length === 1 ? 'item' : 'items'}
               </span>
             )}
@@ -76,7 +76,7 @@ export default function CartDrawer() {
             </div>
             <div>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>Your cart is empty</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Ask KADO to find you something nice!</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Ask Kapruka to find you something nice!</p>
             </div>
           </div>
         ) : checkoutMode ? (
@@ -105,7 +105,7 @@ export default function CartDrawer() {
 
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.product.name}</h4>
-                      <span className="text-[11px] text-kado-gold font-bold block mt-0.5">
+                      <span className="text-[11px] text-Kapruka-gold font-bold block mt-0.5">
                         LKR {(item.product.price * item.qty).toLocaleString()}
                       </span>
                     </div>
@@ -137,16 +137,38 @@ export default function CartDrawer() {
                   LKR {total.toLocaleString()}
                 </span>
               </div>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setCheckoutMode(true)}
-                className="w-full flex items-center justify-center gap-2 py-3.5 text-white font-display font-extrabold text-sm rounded-xl shadow-xl btn-primary relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center gap-2">
-                  Proceed to Checkout
-                  <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-              </motion.button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setCartOpen(false);
+                    addMessage({
+                      id: Date.now().toString(),
+                      role: 'user',
+                      text: "Machan, check out my cart for me!"
+                    });
+                    // Note: We'd need to trigger the assistant response here ideally.
+                    // But just adding the user message will prompt them if they have a listener,
+                    // or we could just say Kapruka will handle it.
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 text-white font-display font-bold text-xs rounded-xl shadow-md relative overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    ✨ Magic Checkout
+                  </span>
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCheckoutMode(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 text-white font-display font-extrabold text-xs rounded-xl shadow-xl btn-primary relative overflow-hidden group"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Fill Forms
+                    <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </motion.button>
+              </div>
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@ interface KadoStore {
   // Chat
   messages: Message[]
   addMessage: (msg: Message) => void
-  updateLastAssistant: (text: string, products?: KaprukProduct[], payLink?: string, orderNumber?: string) => void
+  updateLastAssistant: (text: string, products?: KaprukProduct[], payLink?: string, orderNumber?: string, trackingData?: any) => void
   clearMessages: () => void
 
   // History
@@ -45,13 +45,13 @@ interface KadoStore {
 // Load wishlist from localStorage
 function loadWishlist(): KaprukProduct[] {
   try {
-    const stored = localStorage.getItem('kado-wishlist');
+    const stored = localStorage.getItem('Kapruka-wishlist');
     return stored ? JSON.parse(stored) : [];
   } catch { return []; }
 }
 
 function saveWishlist(items: KaprukProduct[]) {
-  try { localStorage.setItem('kado-wishlist', JSON.stringify(items)); } catch {}
+  try { localStorage.setItem('Kapruka-wishlist', JSON.stringify(items)); } catch {}
 }
 
 export const useStore = create<KadoStore>()(
@@ -59,7 +59,7 @@ export const useStore = create<KadoStore>()(
     (set, get) => ({
       messages: [],
       addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
-      updateLastAssistant: (text, products, payLink, orderNumber) => set((s) => {
+      updateLastAssistant: (text, products, payLink, orderNumber, trackingData) => set((s) => {
         const msgs = [...s.messages]
         const last = msgs.findLastIndex((m) => m.role === 'assistant')
         if (last >= 0) {
@@ -68,7 +68,8 @@ export const useStore = create<KadoStore>()(
             text, 
             ...(products !== undefined && { products }),
             ...(payLink !== undefined && { payLink }),
-            ...(orderNumber !== undefined && { orderNumber })
+            ...(orderNumber !== undefined && { orderNumber }),
+            ...(trackingData !== undefined && { trackingData })
           }
         }
         return { messages: msgs }
@@ -163,7 +164,7 @@ export const useStore = create<KadoStore>()(
   setDetectedOccasion: (occ) => set({ detectedOccasion: occ }),
     }),
     {
-      name: 'kado-storage', // name of the item in the storage (must be unique)
+      name: 'Kapruka-storage', // name of the item in the storage (must be unique)
       partialize: (state) => ({ 
         sessions: state.sessions, 
         activeSessionId: state.activeSessionId, 

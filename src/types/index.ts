@@ -16,6 +16,7 @@ export interface Message {
   products?: KaprukProduct[];
   payLink?: string;
   orderNumber?: string;
+  trackingData?: any;
   isSystem?: boolean;
 }
 

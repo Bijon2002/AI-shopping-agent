@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, CreditCard, CheckCircle } from 'lucide-react';
 import ProductCarousel from './ProductCarousel';
+import OrderTracker from './OrderTracker';
 import type { Message } from '../types';
 
 /** Simple markdown renderer */
@@ -51,7 +52,7 @@ function inlineMarkdown(text: string): (string | ReactNode)[] {
     if (match[1]) parts.push(<strong key={match.index}>{match[2]}</strong>);
     else if (match[3]) parts.push(<em key={match.index}>{match[4]}</em>);
     else if (match[5]) parts.push(<code key={match.index} className="px-1 py-0.5 rounded text-[10px]" style={{ background: 'var(--bg-elevated)' }}>{match[6]}</code>);
-    else if (match[7]) parts.push(<a key={match.index} href={match[9]} target="_blank" rel="noopener noreferrer" className="text-kado-orange underline underline-offset-2">{match[8]}</a>);
+    else if (match[7]) parts.push(<a key={match.index} href={match[9]} target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange underline underline-offset-2">{match[8]}</a>);
     lastIndex = regex.lastIndex;
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex));
@@ -91,13 +92,16 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
           )}
         </div>
 
+        {/* Tracking Details */}
+        {msg.trackingData && <OrderTracker data={msg.trackingData} />}
+
         {/* Pay Link */}
         {msg.payLink && (
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="w-full max-w-[280px] sm:max-w-sm rounded-2xl p-4 sm:p-5 space-y-2.5 sm:space-y-3 relative overflow-hidden theme-t"
             style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,107,43,0.2)', boxShadow: '0 12px 40px rgba(255,107,43,0.1)' }}>
             <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl pointer-events-none" style={{ background: 'rgba(255,107,43,0.12)' }} />
-            <div className="flex items-center gap-2 text-kado-orange">
+            <div className="flex items-center gap-2 text-Kapruka-orange">
               <CreditCard size={16} />
               <span className="font-display font-bold text-xs sm:text-sm">Secure Guest Checkout</span>
             </div>

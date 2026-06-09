@@ -123,13 +123,13 @@ export default function CheckoutForm({
                 onFocus={() => setShowCityDropdown(true)}
                 placeholder="Colombo, Kandy…" className={`${inputCls} pl-8 pr-3`}
                 style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
-              {searchingCities && <Loader2 size={12} className="absolute right-3 top-3 text-kado-orange animate-spin" />}
+              {searchingCities && <Loader2 size={12} className="absolute right-3 top-3 text-Kapruka-orange animate-spin" />}
             </div>
             {showCityDropdown && citySuggestions.length > 0 && (
               <div className="absolute z-20 top-full left-0 right-0 mt-1 rounded-xl shadow-2xl overflow-hidden glass">
                 {citySuggestions.map((city, i) => (
                   <button key={i} type="button" onClick={() => selectCity(city)}
-                    className="w-full text-left px-3 py-2.5 text-xs transition-all hover:bg-kado-orange/15"
+                    className="w-full text-left px-3 py-2.5 text-xs transition-all hover:bg-Kapruka-orange/15"
                     style={{ color: 'var(--text-secondary)' }}>{city}</button>
                 ))}
               </div>
