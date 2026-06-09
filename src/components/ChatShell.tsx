@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code } from 'lucide-react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
@@ -96,12 +96,14 @@ export default function ChatShell() {
       {!isWelcome && (
         <div className="aurora-bg">
           <div className="aurora-orb"
-            style={{ width: '500px', height: '500px', top: '-15%', left: '15%',
+            style={{
+              width: '500px', height: '500px', top: '-15%', left: '15%',
               background: isDark ? 'radial-gradient(circle, rgba(139,0,0,0.1) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(139,0,0,0.06) 0%, transparent 70%)',
               animationDuration: '8s',
             }} />
           <div className="aurora-orb"
-            style={{ width: '400px', height: '400px', bottom: '-10%', right: '10%',
+            style={{
+              width: '400px', height: '400px', bottom: '-10%', right: '10%',
               background: isDark ? 'radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(168,85,247,0.04) 0%, transparent 70%)',
               animationDuration: '10s', animationDelay: '-3s',
             }} />
@@ -110,7 +112,7 @@ export default function ChatShell() {
 
       {/* ═══ Header ═══ */}
       <header className="flex-none px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between z-20 glass relative gradient-border-bottom">
-        <button 
+        <button
           onClick={() => { clearMessages(); setDetectedOccasion(null); }}
           className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity text-left cursor-pointer focus:outline-none"
         >
@@ -137,10 +139,10 @@ export default function ChatShell() {
           {/* TTS Toggle */}
           <button onClick={() => setVoiceOutput(!voiceOutput)}
             className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
-            style={{ 
-              background: voiceOutput ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)', 
-              border: '1px solid var(--border-default)', 
-              color: voiceOutput ? 'var(--Kapruka-orange)' : 'var(--text-muted)' 
+            style={{
+              background: voiceOutput ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: voiceOutput ? 'var(--Kapruka-orange)' : 'var(--text-muted)'
             }}>
             {voiceOutput ? <span title="Voice Output On">🔊</span> : <span title="Voice Output Off">🔈</span>}
           </button>
@@ -152,7 +154,7 @@ export default function ChatShell() {
             style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}>
             <Menu size={16} />
           </motion.button>
-          
+
           {/* Wishlist */}
           {wishlistCount > 0 && (
             <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -183,6 +185,11 @@ export default function ChatShell() {
       <main className="flex-1 overflow-hidden flex flex-col z-10 relative">
         <MessageList isLoading={isLoading} currentToolName={currentToolName} onSend={handleSendMessage} />
         <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+
+        <div className="text-center text-[10px] sm:text-xs pb-2 sm:pb-3 z-10 flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+          <Code size={12} className="text-Kapruka-orange opacity-80" />
+          <span>Developed by <a href="https://bijonn.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange hover:underline font-bold tracking-wide">BIJON</a></span>
+        </div>
       </main>
 
       <AnimatePresence>
