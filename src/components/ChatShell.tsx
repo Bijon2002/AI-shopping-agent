@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Sun, Moon, Heart, Menu } from 'lucide-react';
+import { ShoppingCart, Heart, Menu } from 'lucide-react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
 import WishlistDrawer from './WishlistDrawer';
 import HistoryDrawer from './HistoryDrawer';
 import { useStore } from '../store';
-import { useTheme } from './ThemeProvider';
+
 import { sendMessage } from '../lib/openrouter';
 import { detectOccasion, getSystemContextNote } from '../lib/occasion-engine';
 
@@ -19,7 +19,7 @@ export default function ChatShell() {
     detectedOccasion, setDetectedOccasion
   } = useStore();
 
-  const { isDark, toggleTheme } = useTheme();
+
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolName, setCurrentToolName] = useState<string | null>(null);
   const [voiceOutput, setVoiceOutput] = useState(false);

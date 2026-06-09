@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
-import { Package, Truck, CheckCircle2, Clock, MapPin } from 'lucide-react';
+import { Package, CheckCircle2, Clock, MapPin } from 'lucide-react';
 
 export default function OrderTracker({ data }: { data: any }) {
   if (!data || !data.order_number) return null;
 
   const steps = data.progress || [];
-  const items = data.items || [];
 
   return (
     <motion.div
