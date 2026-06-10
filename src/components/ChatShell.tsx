@@ -123,7 +123,7 @@ export default function ChatShell() {
 
     if (cart.length > 0) {
       const cartContext = `[SYSTEM STATE - CART SUMMARY]\nThe user currently has ${cartCount} items in their cart:\n` +
-        cart.map(i => `- ${i.qty}x ${i.product.name} (LKR ${i.product.price} each)`).join('\n') +
+        cart.map(i => `- ${i.qty}x ${i.product.name} (ID: ${i.product.id}) (LKR ${i.product.price} each)`).join('\n') +
         `\nBase Total: LKR ${cart.reduce((s, i) => s + (i.product.price * i.qty), 0)}\n(Use these exact prices when calculating the invoice!)`;
       historyPayload.push({ role: 'user', content: cartContext });
     }
