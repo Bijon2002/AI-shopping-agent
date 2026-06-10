@@ -97,7 +97,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
                 <img src={msg.image} alt="User Upload" className="w-full max-w-[200px] sm:max-w-[250px] rounded-lg mb-2 shadow-sm border object-cover" style={{ borderColor: 'rgba(255,255,255,0.2)', maxHeight: '250px' }} />
               )}
               {msg.text && (
-                <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+                <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-all">{msg.text}</p>
               )}
             </>
           ) : (
