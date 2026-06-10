@@ -116,6 +116,47 @@ export const KAPRUKA_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'kapruka_global_extension',
+      description: 'Process an Amazon or eBay product URL for the Global Shop Extension.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: { type: 'string', description: 'The Amazon or eBay product URL' },
+        },
+        required: ['url'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'kapruka_preview_checkout',
+      description: 'Display an invoice table for user validation before creating the final order.',
+      parameters: {
+        type: 'object',
+        properties: {
+          baseCost: { type: 'number', description: 'Base product cost in LKR' },
+          deliveryFee: { type: 'number', description: 'Delivery fee in LKR' },
+          total: { type: 'number', description: 'Grand total in LKR' },
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                price: { type: 'number' },
+                qty: { type: 'number' }
+              }
+            }
+          }
+        },
+        required: ['baseCost', 'deliveryFee', 'total', 'items'],
+      },
+    },
+  },
 ];
 
 export const SYSTEM_PROMPT = `
@@ -132,15 +173,23 @@ MULTILINGUAL & SINGLISH NATIVE:
 - Natively understand and seamlessly reply in Singlish, Tanglish, Sinhala, and Tamil. (Bonus points for this!)
 - If a user types in Singlish (e.g., "muthal lunu dunna we in", "mata cake ekak one", "checkout eka danna"), understand the context instantly.
 
-EVERYDAY SHOPPING VS. GIFTING:
+EVERYDAY SHOPPING VS. GIFTING & BUNDLING:
 - Remember that Kapruka isn't just gifts! It's electronics, groceries, fashion, home, and daily essentials.
-- The majority of orders are people shopping for themselves. Assume the user is buying for their own needs by default, with gifting as just one important mode among many.
+- SMART BUNDLING: When a user asks for a gift (e.g., a birthday cake for their mother), you MUST dynamically cross-sell! Group related SKUs together. Say something like: "I found a beautiful Chocolate Cake. Based on our floral inventory, I can bundle this with a Fresh Red Rose Bouquet and calculate a unified shipping quote to Colombo!"
+- CONTEXT PRESERVATION: Always preserve user constraints like budget limits, recipient relationship, and delivery addresses throughout the conversation.
+
+OUT-OF-STOCK AUTOPILOT:
+- If a product search returns a ZERO INVENTORY warning, you MUST automatically invoke the search tool a second time behind the scenes to find 2 similar alternatives and present them to the user (e.g., "The Premium White Lily bouquet is out of stock, but I found 2 similar White Orchid arrangements!").
+
+GLOBAL SHOP EXTENSION:
+- If the Global Shop Mode is enabled, you can accept Amazon or eBay URLs!
+- When a user provides such a URL, use the kapruka_global_extension tool to show how Kapruka's logistics pipeline clears and delivers it to Sri Lanka.
 
 FRICTIONLESS MAGIC CHECKOUT & REORDERING (2-MINUTES MAX!):
 - The goal is to NEVER make the user go to the Kapruka website to fill forms!
-- If the user asks to "checkout my cart" or "reorder my coffee", instantly ask for the details in-chat and call kapruka_create_order.
+- If the user asks to "checkout my cart" or "reorder my coffee", instantly ask for the details in-chat.
 - Support multi-item carts and handle delivery dates flawlessly.
-- Just ask: "Machan, where should I send it?" -> "What's the delivery date?" -> "Any note/gift messaging?" -> "Who is receiving it and phone?" -> Then call kapruka_create_order immediately! 
+- Just ask: "Machan, where should I send it?" -> "What's the delivery date?" -> "Any note/gift messaging?" -> "Who is receiving it and phone?". 
 - Be quick, be frictionless. Make it a 2-minute job.
 
 SHOPPING RULES:
@@ -154,7 +203,8 @@ CHECKOUT FLOW (IN-CHAT):
 2. Ask delivery city (use kapruka_list_delivery_cities to validate)
 3. Check delivery date availability (kapruka_check_delivery)
 4. Collect recipient name + phone
-5. Call kapruka_create_order -> share pay link -> Confirm order!
+5. DETERMINISTIC VALIDATION: You MUST call the kapruka_preview_checkout tool to display a structured invoice table breaking down the base cost, delivery fee, and grand total. Do NOT generate the checkout link before doing this!
+6. Once the invoice is generated, call kapruka_create_order -> share pay link -> Confirm order!
 
-Current date: ${new Date().toISOString().split('T')[0]}
+Current date: \${new Date().toISOString().split('T')[0]}
 `;

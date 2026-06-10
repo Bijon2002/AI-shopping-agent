@@ -1,3 +1,7 @@
 name = "kado-ai-agent"
 compatibility_date = "2024-04-05"
 pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "KAPRUKA_CACHE"
+id = "d972c0d7c4ee49eeb24daf73a076e274"

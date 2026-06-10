@@ -6,8 +6,12 @@ interface KadoStore {
   // Chat
   messages: Message[]
   addMessage: (msg: Message) => void
-  updateLastAssistant: (text: string, products?: KaprukProduct[], payLink?: string, orderNumber?: string, trackingData?: any) => void
+  updateLastAssistant: (text: string, products?: KaprukProduct[], payLink?: string, orderNumber?: string, trackingData?: any, invoiceData?: any) => void
   clearMessages: () => void
+
+  // Global Shop Mode
+  globalShopMode: boolean
+  setGlobalShopMode: (mode: boolean) => void
 
   // History
   sessions: ChatSession[]
@@ -57,9 +61,12 @@ function saveWishlist(items: KaprukProduct[]) {
 export const useStore = create<KadoStore>()(
   persist(
     (set, get) => ({
+      globalShopMode: false,
+      setGlobalShopMode: (mode) => set({ globalShopMode: mode }),
+
       messages: [],
       addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
-      updateLastAssistant: (text, products, payLink, orderNumber, trackingData) => set((s) => {
+      updateLastAssistant: (text, products, payLink, orderNumber, trackingData, invoiceData) => set((s) => {
         const msgs = [...s.messages]
         const last = msgs.findLastIndex((m) => m.role === 'assistant')
         if (last >= 0) {
@@ -69,7 +76,8 @@ export const useStore = create<KadoStore>()(
             ...(products !== undefined && { products }),
             ...(payLink !== undefined && { payLink }),
             ...(orderNumber !== undefined && { orderNumber }),
-            ...(trackingData !== undefined && { trackingData })
+            ...(trackingData !== undefined && { trackingData }),
+            ...(invoiceData !== undefined && { invoiceData })
           }
         }
         return { messages: msgs }

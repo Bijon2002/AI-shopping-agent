@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu, Code } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus } from 'lucide-react';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
@@ -16,41 +16,122 @@ export default function ChatShell() {
     messages, addMessage, updateLastAssistant, clearMessages,
     cart, cartOpen, setCartOpen, wishlist, wishlistOpen, setWishlistOpen,
     historyOpen, setHistoryOpen,
-    detectedOccasion, setDetectedOccasion
+    detectedOccasion, setDetectedOccasion,
+    globalShopMode, setGlobalShopMode
   } = useStore();
 
   const { isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolName, setCurrentToolName] = useState<string | null>(null);
   const [voiceOutput, setVoiceOutput] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isGlobalDragging, setIsGlobalDragging] = useState(false);
+
+  const processImageFile = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      const MAX_SIZE = 1500;
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
+        else { width *= MAX_SIZE / height; height = MAX_SIZE; }
+      }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, width, height);
+        setUploadedImage(canvas.toDataURL('image/jpeg', 0.8));
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { alert("Could not process this image format."); URL.revokeObjectURL(url); };
+    img.src = url;
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsGlobalDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsGlobalDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsGlobalDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processImageFile(file);
+    }
+  };
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const wishlistCount = wishlist.length;
   const isWelcome = messages.length === 0 && !isLoading;
 
-  const handleSendMessage = async (text: string) => {
-    addMessage({ id: Date.now().toString(), role: 'user', text });
+  const handleSendMessage = async (text: string, image?: string) => {
+    addMessage({ id: crypto.randomUUID(), role: 'user', text, image });
     setIsLoading(true);
     setCurrentToolName(null);
 
     const occasion = detectOccasion(text);
     if (occasion) setDetectedOccasion(occasion.name);
 
-    addMessage({ id: (Date.now() + 1).toString(), role: 'assistant', text: '' });
+    addMessage({ id: crypto.randomUUID(), role: 'assistant', text: '' });
 
-    const historyPayload = messages.map(m => ({ role: m.role, content: m.text }));
-    historyPayload.push({ role: 'user', content: text });
+    const historyPayload = messages.map(m => {
+      if (m.image) {
+        const supportedFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        const isSupported = supportedFormats.some(fmt => m.image?.startsWith(`data:${fmt}`));
+        
+        if (isSupported) {
+          return {
+            role: m.role,
+            content: [
+              { type: 'text', text: m.text || 'Please look at this image.' },
+              { type: 'image_url', image_url: { url: m.image } }
+            ]
+          };
+        } else {
+          return { role: m.role, content: (m.text || '') + '\n[Image removed: unsupported format]' };
+        }
+      }
+      return { role: m.role, content: m.text };
+    });
+
+    if (image) {
+      historyPayload.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: text || 'Please look at this image.' },
+          { type: 'image_url', image_url: { url: image } }
+        ]
+      });
+    } else {
+      historyPayload.push({ role: 'user', content: text });
+    }
+
     if (occasion) historyPayload.push({ role: 'user', content: getSystemContextNote(occasion) });
 
     let acc = '';
     try {
       await sendMessage(
         historyPayload,
+        globalShopMode,
         (chunk) => { acc += chunk; updateLastAssistant(acc); },
         (products) => { updateLastAssistant(acc, products); },
         (payUrl) => { updateLastAssistant(acc, undefined, payUrl); },
         (orderNo) => { updateLastAssistant(acc, undefined, undefined, orderNo); },
         (trackingData) => { updateLastAssistant(acc, undefined, undefined, undefined, trackingData); },
+        (invoiceData) => { updateLastAssistant(acc, undefined, undefined, undefined, undefined, invoiceData); },
         (toolName) => { setCurrentToolName(toolName); },
         () => { setCurrentToolName(null); }
       );
@@ -72,8 +153,43 @@ export default function ChatShell() {
     }
   };
 
+  // ═══ Strategic Upgrade #4: Global Shop Chrome Extension Integration ═══
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'GLOBAL_SHOP_IMPORT') {
+        const { productTitle, productUrl, price, image } = event.data.payload || {};
+        
+        setGlobalShopMode(true);
+        
+        const prompt = `[GLOBAL SHOP IMPORT]\nI found this item on another website and want to buy it via Kapruka Global Shop:\nTitle: ${productTitle || 'Unknown Product'}\nURL: ${productUrl || ''}\nPrice: ${price || 'Unknown'}\n\nPlease help me calculate the total landed cost to Sri Lanka and guide me through ordering it.`;
+        
+        // Execute the prompt simulating the user
+        setTimeout(() => {
+          handleSendMessage(prompt, image);
+        }, 100);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [globalShopMode, messages, isLoading, currentToolName, voiceOutput]); // Include dependencies of handleSendMessage
+
   return (
-    <div className="h-full w-full flex flex-col relative overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+    <div 
+      className="h-full w-full flex flex-col relative overflow-hidden" 
+      style={{ background: 'var(--bg-base)' }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* ═══ Global Drag Overlay ═══ */}
+      {isGlobalDragging && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm transition-all pointer-events-none">
+          <div className="w-64 h-64 border-4 border-dashed border-Kapruka-orange rounded-3xl flex flex-col items-center justify-center text-Kapruka-orange animate-pulse bg-Kapruka-orange/10 shadow-2xl">
+            <ImagePlus size={64} className="mb-4" />
+            <h2 className="font-display text-xl font-bold">Drop Image Here</h2>
+          </div>
+        </div>
+      )}
 
       {/* ═══ Video Background (welcome screen only) ═══ */}
       {isWelcome && (
@@ -147,6 +263,18 @@ export default function ChatShell() {
             {voiceOutput ? <span title="Voice Output On">🔊</span> : <span title="Voice Output Off">🔈</span>}
           </button>
 
+          {/* Global Shop Toggle */}
+          <button onClick={() => setGlobalShopMode(!globalShopMode)}
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
+            style={{
+              background: globalShopMode ? 'rgba(59,130,246,0.1)' : 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: globalShopMode ? '#3b82f6' : 'var(--text-muted)'
+            }}
+            title={globalShopMode ? "Global Shop Extension Active" : "Enable Global Shop Extension"}>
+            <Globe size={16} />
+          </button>
+
           {/* History / Menu */}
           <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
             onClick={() => setHistoryOpen(true)}
@@ -184,7 +312,7 @@ export default function ChatShell() {
       {/* ═══ Chat Area ═══ */}
       <main className="flex-1 overflow-hidden flex flex-col z-10 relative">
         <MessageList isLoading={isLoading} currentToolName={currentToolName} onSend={handleSendMessage} />
-        <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        <ChatInput onSend={handleSendMessage} disabled={isLoading} image={uploadedImage} setImage={setUploadedImage} />
 
         <div className="text-center text-[10px] sm:text-xs pb-2 sm:pb-3 z-10 flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
           <Code size={12} className="text-Kapruka-orange opacity-80" />

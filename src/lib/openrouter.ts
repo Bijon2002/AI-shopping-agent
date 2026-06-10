@@ -5,11 +5,13 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 export async function sendMessage(
   history: Array<{ role: 'user' | 'assistant'; content: any }>,
+  globalShopMode: boolean,
   onChunk: (text: string) => void,
   onProducts: (products: any[]) => void,
   onPayLink: (url: string) => void,
   onOrderConfirm: (orderNumber: string) => void,
   onTracking: (trackingData: any) => void,
+  onInvoice: (invoiceData: any) => void,
   onToolStart: (toolName: string) => void,
   onToolEnd: (toolName: string, result: any) => void
 ) {
@@ -21,7 +23,12 @@ export async function sendMessage(
 
   // Build the list of messages, starting with system prompt
   let currentMessages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { 
+      role: 'system', 
+      content: SYSTEM_PROMPT 
+        + "\n\n[VISION CAPABILITY: You have vision capabilities. If the user uploads an image, analyze it and use your kapruka_search_products tool to find visually similar items or the exact product requested. Extract key descriptive words from the image to use as your search query.]"
+        + (globalShopMode ? "\n\n[SYSTEM STATE: GLOBAL SHOP MODE IS CURRENTLY ENABLED. YOU CAN PROCESS AMAZON AND EBAY URLS USING kapruka_global_extension.]" : "") 
+    },
     ...history.map(msg => ({
       role: msg.role,
       content: msg.content
@@ -48,7 +55,8 @@ export async function sendMessage(
         model: 'openai/gpt-4o-mini',
         messages: currentMessages,
         tools: KAPRUKA_TOOLS,
-        tool_choice: 'auto'
+        tool_choice: 'auto',
+        max_tokens: 1500
       })
     });
 
@@ -102,6 +110,15 @@ export async function sendMessage(
             if (result && !result.error) {
               onTracking(result);
             }
+          } else if (name === 'kapruka_preview_checkout') {
+            result = { success: true, message: "Invoice displayed to user for validation." };
+            onInvoice(args);
+          } else if (name === 'kapruka_global_extension') {
+            result = { 
+              success: true, 
+              simulated_routing: "Sri Lanka via Kapruka Global Logistics",
+              message: "Parsed global URL. Proceed to discuss options with the user." 
+            };
           } else {
             result = { error: `Tool ${name} not found` };
           }
@@ -127,6 +144,14 @@ export async function sendMessage(
         await new Promise(resolve => setTimeout(resolve, 4));
       }
       keepRunning = false;
+    }
+  }
+
+  if (keepRunning && loops >= maxLoops) {
+    const errorMsg = "\n\n*(System: Maximum tool execution loops reached. The request was too complex or returned no results. Please simplify your query!)*";
+    for (const char of errorMsg) {
+      onChunk(char);
+      await new Promise(resolve => setTimeout(resolve, 4));
     }
   }
 }

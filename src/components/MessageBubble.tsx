@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, CreditCard, CheckCircle } from 'lucide-react';
+import { ExternalLink, CreditCard, CheckCircle, Receipt } from 'lucide-react';
 import ProductCarousel from './ProductCarousel';
 import OrderTracker from './OrderTracker';
 import type { Message } from '../types';
@@ -45,14 +45,20 @@ function renderMarkdown(text: string) {
 
 function inlineMarkdown(text: string): (string | ReactNode)[] {
   const parts: (string | ReactNode)[] = [];
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)|(\[(.+?)\]\((.+?)\))/g;
+  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`(.+?)`)|(!?\[(.*?)\]\((.*?)\))/g;
   let lastIndex = 0; let match;
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
-    if (match[1]) parts.push(<strong key={match.index}>{match[2]}</strong>);
-    else if (match[3]) parts.push(<em key={match.index}>{match[4]}</em>);
-    else if (match[5]) parts.push(<code key={match.index} className="px-1 py-0.5 rounded text-[10px]" style={{ background: 'var(--bg-elevated)' }}>{match[6]}</code>);
-    else if (match[7]) parts.push(<a key={match.index} href={match[9]} target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange underline underline-offset-2">{match[8]}</a>);
+    if (match[1]) parts.push(<strong key={`strong-${match.index}`}>{match[2]}</strong>);
+    else if (match[3]) parts.push(<em key={`em-${match.index}`}>{match[4]}</em>);
+    else if (match[5]) parts.push(<code key={`code-${match.index}`} className="px-1 py-0.5 rounded text-[10px]" style={{ background: 'var(--bg-elevated)' }}>{match[6]}</code>);
+    else if (match[7]) {
+      if (match[7].startsWith('!')) {
+        parts.push(<img key={`img-${match.index}`} src={match[9]} alt={match[8]} className="max-w-full rounded mt-1 shadow-sm border" style={{ borderColor: 'var(--border-default)' }} />);
+      } else {
+        parts.push(<a key={`link-${match.index}`} href={match[9]} target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange underline underline-offset-2">{match[8]}</a>);
+      }
+    }
     lastIndex = regex.lastIndex;
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex));
@@ -86,7 +92,14 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
             : { background: 'var(--bubble-assistant-bg)', border: '1px solid var(--bubble-assistant-border)', color: 'var(--text-primary)', backdropFilter: 'blur(12px)' }
           }>
           {isUser ? (
-            <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+            <>
+              {msg.image && (
+                <img src={msg.image} alt="User Upload" className="w-full max-w-[200px] sm:max-w-[250px] rounded-lg mb-2 shadow-sm border object-cover" style={{ borderColor: 'rgba(255,255,255,0.2)', maxHeight: '250px' }} />
+              )}
+              {msg.text && (
+                <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+              )}
+            </>
           ) : (
             <div className="text-[13px] sm:text-sm leading-relaxed break-words">{renderMarkdown(msg.text)}</div>
           )}
@@ -125,6 +138,43 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
             <div className="rounded-xl p-2.5 sm:p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
               <span className="text-[8px] sm:text-[9px] block uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Reference</span>
               <span className="font-display font-bold text-base sm:text-lg gradient-text">#{msg.orderNumber}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Invoice Data */}
+        {msg.invoiceData && (
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-[300px] sm:max-w-sm rounded-2xl p-4 sm:p-5 space-y-3 theme-t"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}>
+            <div className="flex items-center gap-2 text-Kapruka-orange mb-2">
+              <Receipt size={16} />
+              <span className="font-display font-bold text-sm">Invoice Preview</span>
+            </div>
+            
+            <div className="space-y-2 border-b pb-3 mb-3" style={{ borderColor: 'var(--border-default)' }}>
+              {msg.invoiceData.items?.map((item: any, idx: number) => (
+                <div key={idx} className="flex justify-between text-xs sm:text-sm">
+                  <span className="truncate max-w-[180px]" style={{ color: 'var(--text-secondary)' }}>{item.qty}x {item.name}</span>
+                  <span className="font-medium whitespace-nowrap">Rs. {item.price?.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="space-y-1 text-xs sm:text-sm">
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--text-secondary)' }}>Subtotal</span>
+                <span>Rs. {msg.invoiceData.baseCost?.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: 'var(--text-secondary)' }}>Delivery Fee</span>
+                <span>Rs. {msg.invoiceData.deliveryFee?.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-between pt-3 mt-3 border-t font-bold text-sm sm:text-base" style={{ borderColor: 'var(--border-default)' }}>
+              <span>Grand Total</span>
+              <span className="text-Kapruka-orange">Rs. {msg.invoiceData.total?.toLocaleString()}</span>
             </div>
           </motion.div>
         )}

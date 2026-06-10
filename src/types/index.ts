@@ -13,10 +13,12 @@ export interface Message {
   id: string;
   role: 'user' | 'assistant';
   text: string;
+  image?: string;
   products?: KaprukProduct[];
   payLink?: string;
   orderNumber?: string;
   trackingData?: any;
+  invoiceData?: { baseCost: number; deliveryFee: number; total: number; items: any[] };
   isSystem?: boolean;
 }
 
