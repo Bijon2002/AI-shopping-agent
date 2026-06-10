@@ -115,10 +115,12 @@ export async function sendMessage(
             result = { success: true, message: "Invoice displayed to user for validation." };
             onInvoice(args);
           } else if (name === 'kapruka_global_extension') {
+            const simulatedPriceLKR = Math.floor(Math.random() * 50000) + 15000;
             result = { 
               success: true, 
               simulated_routing: "Sri Lanka via Kapruka Global Logistics",
-              message: "Parsed global URL. Proceed to discuss options with the user." 
+              estimated_price_lkr: simulatedPriceLKR,
+              message: `Parsed global URL. The estimated landed cost is LKR ${simulatedPriceLKR}. Proceed to discuss options with the user and use this exact price for the invoice.` 
             };
           } else {
             result = { error: `Tool ${name} not found` };
