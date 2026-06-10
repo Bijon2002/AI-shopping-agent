@@ -17,7 +17,7 @@ export async function sendMessage(
 ) {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
   if (!apiKey) {
-    onChunk("Aney machan, you need to set VITE_OPENROUTER_API_KEY in your .env file!");
+    onChunk("Aney machan, you need to set your API Key in your .env file!");
     return;
   }
 
@@ -27,7 +27,8 @@ export async function sendMessage(
       role: 'system', 
       content: SYSTEM_PROMPT 
         + "\n\n[VISION CAPABILITY: You have vision capabilities. If the user uploads an image, analyze it and use your kapruka_search_products tool to find visually similar items or the exact product requested. Extract key descriptive words from the image to use as your search query.]"
-        + (globalShopMode ? "\n\n[SYSTEM STATE: GLOBAL SHOP MODE IS CURRENTLY ENABLED. YOU CAN PROCESS AMAZON AND EBAY URLS USING kapruka_global_extension.]" : "") 
+        + (globalShopMode ? "\n\n[SYSTEM STATE: GLOBAL SHOP MODE IS CURRENTLY ENABLED. YOU CAN PROCESS AMAZON AND EBAY URLS USING kapruka_global_extension.]" : "")
+        + `\n\nCurrent date: ${new Date().toISOString().split('T')[0]}` 
     },
     ...history.map(msg => ({
       role: msg.role,
@@ -42,45 +43,27 @@ export async function sendMessage(
   while (keepRunning && loops < maxLoops) {
     loops++;
     
-    // Call OpenRouter with aggressive model fallback
-    let res: Response | null = null;
-    let errorText = '';
-    const modelsToTry = [
-      'meta-llama/llama-3.3-70b-instruct:free',
-      'qwen/qwen3-next-80b-a3b-instruct:free',
-      'nousresearch/hermes-3-llama-3.1-405b:free',
-      'google/gemma-4-31b-it:free',
-      'openrouter/free'
-    ];
+    // Call OpenRouter directly using ChatGPT model
+    const res = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://bijonn.pages.dev',
+        'X-Title': 'Kapruka - Smart Sri Lankan Shopping',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: currentMessages,
+        tools: KAPRUKA_TOOLS,
+        tool_choice: 'auto',
+        max_tokens: 1000
+      })
+    });
 
-    for (const modelId of modelsToTry) {
-      res = await fetch(OPENROUTER_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://bijonn.pages.dev',
-          'X-Title': 'Kapruka - Smart Sri Lankan Shopping',
-        },
-        body: JSON.stringify({
-          model: modelId,
-          messages: currentMessages,
-          tools: KAPRUKA_TOOLS,
-          max_tokens: 1500
-        })
-      });
-
-      if (res.ok) {
-        break; // Success! We found a working model.
-      } else {
-        errorText = await res.text();
-        // Stop retrying if it's an auth or credits error
-        if (res.status === 401 || res.status === 402) break;
-      }
-    }
-
-    if (!res || !res.ok) {
-      throw new Error(`OpenRouter API error: ${res?.statusText || 'Failed'} - ${errorText}`);
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`OpenRouter API error: ${res.statusText} - ${errorText}`);
     }
 
     const data = await res.json();
@@ -157,10 +140,7 @@ export async function sendMessage(
       currentMessages.push(...toolResults as any);
     } else {
       const content = assistantMessage.content || "";
-      for (const char of content) {
-        onChunk(char);
-        await new Promise(resolve => setTimeout(resolve, 4));
-      }
+      onChunk(content);
       keepRunning = false;
     }
   }

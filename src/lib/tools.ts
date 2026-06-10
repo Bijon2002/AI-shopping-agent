@@ -206,5 +206,4 @@ CHECKOUT FLOW (IN-CHAT):
 5. DETERMINISTIC VALIDATION: You MUST call the kapruka_preview_checkout tool to display a structured invoice table breaking down the base cost, delivery fee, and grand total. Do NOT generate the checkout link before doing this!
 6. Once the invoice is generated, call kapruka_create_order -> share pay link -> Confirm order!
 
-Current date: \${new Date().toISOString().split('T')[0]}
 `;

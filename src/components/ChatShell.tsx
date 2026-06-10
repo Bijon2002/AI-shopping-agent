@@ -121,6 +121,13 @@ export default function ChatShell() {
 
     if (occasion) historyPayload.push({ role: 'user', content: getSystemContextNote(occasion) });
 
+    if (cart.length > 0) {
+      const cartContext = `[SYSTEM STATE - CART SUMMARY]\nThe user currently has ${cartCount} items in their cart:\n` +
+        cart.map(i => `- ${i.qty}x ${i.name} (LKR ${i.price} each)`).join('\n') +
+        `\nBase Total: LKR ${cart.reduce((s, i) => s + (i.price * i.qty), 0)}\n(Use these exact prices when calculating the invoice!)`;
+      historyPayload.push({ role: 'user', content: cartContext });
+    }
+
     let acc = '';
     try {
       await sendMessage(
