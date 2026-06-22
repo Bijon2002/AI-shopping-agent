@@ -136,7 +136,6 @@ DATE VALIDATION RULES (apply these strictly):
     // ⚡ Parse SSE stream — tokens appear word-by-word
     let streamedContent = '';
     let streamedToolCalls: any[] = [];
-    let finishReason = '';
 
     const reader = res.body!.getReader();
     const decoder = new TextDecoder();
@@ -161,7 +160,6 @@ DATE VALIDATION RULES (apply these strictly):
             const parsed = JSON.parse(raw);
             const choice0 = parsed.choices?.[0];
             if (!choice0) continue;
-            if (choice0.finish_reason) finishReason = choice0.finish_reason;
             const delta = choice0.delta;
             if (delta?.content) {
               streamedContent += delta.content;
