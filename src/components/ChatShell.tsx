@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Headphones } from 'lucide-react';
 import MessageList from './MessageList';
+import VoiceMode from './VoiceMode';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
 import WishlistDrawer from './WishlistDrawer';
@@ -17,7 +18,9 @@ export default function ChatShell() {
     cart, cartOpen, setCartOpen, wishlist, wishlistOpen, setWishlistOpen,
     historyOpen, setHistoryOpen,
     detectedOccasion, setDetectedOccasion,
-    globalShopMode, setGlobalShopMode
+    globalShopMode, setGlobalShopMode,
+    voiceModeOpen, setVoiceModeOpen,
+    clearCart, removeFromCart
   } = useStore();
 
   const { isDark } = useTheme();
@@ -77,7 +80,7 @@ export default function ChatShell() {
   const wishlistCount = wishlist.length;
   const isWelcome = messages.length === 0 && !isLoading;
 
-  const handleSendMessage = async (text: string, image?: string) => {
+  const handleSendMessage = async (text: string, image?: string, onFinish?: (text: string) => void) => {
     addMessage({ id: crypto.randomUUID(), role: 'user', text, image });
     setIsLoading(true);
     setCurrentToolName(null);
@@ -133,14 +136,25 @@ export default function ChatShell() {
       await sendMessage(
         historyPayload,
         globalShopMode,
-        (chunk) => { acc += chunk; updateLastAssistant(acc); },
+        (chunk) => {
+          if (chunk.startsWith('\x00REPLACE\x00')) {
+            acc = chunk.slice('\x00REPLACE\x00'.length);
+          } else {
+            acc += chunk;
+          }
+          updateLastAssistant(acc);
+        },
         (products) => { updateLastAssistant(acc, products); },
         (payUrl) => { updateLastAssistant(acc, undefined, payUrl); },
         (orderNo) => { updateLastAssistant(acc, undefined, undefined, orderNo); },
         (trackingData) => { updateLastAssistant(acc, undefined, undefined, undefined, trackingData); },
         (invoiceData) => { updateLastAssistant(acc, undefined, undefined, undefined, undefined, invoiceData); },
         (toolName) => { setCurrentToolName(toolName); },
-        () => { setCurrentToolName(null); }
+        () => { setCurrentToolName(null); },
+        (action, payload) => {
+          if (action === 'empty') clearCart();
+          else if (action === 'remove') removeFromCart(payload);
+        }
       );
     } catch (err: any) {
       acc = `Aney machang, I hit a snag: ${err.message || 'connection failed'}. Please try again!`;
@@ -148,13 +162,14 @@ export default function ChatShell() {
     } finally {
       setIsLoading(false);
       setCurrentToolName(null);
-      if (voiceOutput && acc.trim()) {
+      if (onFinish) {
+        onFinish(acc);
+      } else if (voiceOutput && acc.trim()) {
         const u = new SpeechSynthesisUtterance(acc.trim());
-        // Try to find a good voice (maybe an English/Asian one if available)
         const voices = window.speechSynthesis.getVoices();
         const voice = voices.find(v => v.lang.includes('en-IN') || v.lang.includes('en-GB')) || voices[0];
         if (voice) u.voice = voice;
-        u.rate = 1.1; // Speak slightly faster
+        u.rate = 1.1;
         window.speechSynthesis.speak(u);
       }
     }
@@ -259,6 +274,18 @@ export default function ChatShell() {
 
         <div className="flex items-center gap-1 sm:gap-1.5">
 
+          {/* Voice Mode Toggle */}
+          <button onClick={() => setVoiceModeOpen(!voiceModeOpen)}
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t relative"
+            style={{
+              background: voiceModeOpen ? 'linear-gradient(135deg, #A855F7, #EC4899)' : 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: voiceModeOpen ? '#fff' : 'var(--text-muted)'
+            }}>
+            {voiceModeOpen && <span className="absolute inset-0 rounded-lg sm:rounded-xl bg-purple-500/20 animate-ping pointer-events-none" />}
+            <Headphones size={16} />
+          </button>
+
           {/* TTS Toggle */}
           <button onClick={() => setVoiceOutput(!voiceOutput)}
             className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
@@ -331,6 +358,7 @@ export default function ChatShell() {
         {cartOpen && <CartDrawer />}
         {wishlistOpen && <WishlistDrawer />}
         {historyOpen && <HistoryDrawer />}
+        {voiceModeOpen && <VoiceMode onClose={() => setVoiceModeOpen(false)} onSend={handleSendMessage} />}
       </AnimatePresence>
     </div>
   );

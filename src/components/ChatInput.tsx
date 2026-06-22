@@ -28,13 +28,8 @@ export default function ChatInput({
         if (t) setText(p => (p + ' ' + t).trim()); 
       };
       rec.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
         setIsListening(false);
-        if (event.error === 'not-allowed') {
-          alert("Microphone access denied. Please allow microphone permissions in your browser.");
-        } else if (event.error === 'network') {
-          alert("Network error: The browser's speech recognition service is unreachable. This usually happens if a firewall/adblocker blocks it, or if you aren't using Chrome/Edge.");
-        }
+        if (event.error === 'no-speech' || event.error === 'aborted') return;
       };
       rec.onend = () => setIsListening(false);
       recognitionRef.current = rec;

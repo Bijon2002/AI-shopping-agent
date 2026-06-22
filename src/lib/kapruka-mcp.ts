@@ -6,11 +6,23 @@ const API_BASE = '/api/mcp-call';
 async function callMCPTool(toolName: string, args: Record<string, unknown>) {
   console.debug('[MCP] →', toolName, args);
 
-  const res = await fetch(API_BASE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tool: toolName, args }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout for MCP tools
+
+  let res;
+  try {
+    res = await fetch(API_BASE, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: toolName, args }),
+    });
+  } catch (e: any) {
+    if (e.name === 'AbortError') throw new Error(`MCP Tool ${toolName} timed out after 20 seconds.`);
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const data = await res.json();
 
@@ -60,6 +72,10 @@ export const searchProducts = async (
   });
 
   // Map the raw results to our internal KaprukProduct format
+  if (typeof raw === 'string') {
+    return { error: raw, products: [] };
+  }
+  
   const products: KaprukProduct[] = (raw?.results ?? []).map((p: any) => ({
     id: p.id,
     name: p.name,

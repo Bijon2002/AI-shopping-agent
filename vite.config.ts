@@ -145,6 +145,32 @@ function mcpPlugin(): Plugin {
   return {
     name: 'mcp-server-plugin',
     configureServer(server) {
+      server.middlewares.use('/api/nvidia-call', (req, res, next) => {
+        if (req.method !== 'POST') { next(); return; }
+
+        let bodyData = '';
+        req.on('data', (chunk) => bodyData += chunk.toString());
+        req.on('end', async () => {
+          try {
+            const { apiKey, payload } = JSON.parse(bodyData);
+            const nvRes = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+              },
+              body: JSON.stringify(payload)
+            });
+
+            res.writeHead(nvRes.status, { 'Content-Type': 'application/json' });
+            res.end(await nvRes.text());
+          } catch (err: any) {
+             res.writeHead(500, { 'Content-Type': 'application/json' });
+             res.end(JSON.stringify({ error: err.message }));
+          }
+        });
+      });
+
       server.middlewares.use('/api/mcp-call', (req, res, next) => {
         if (req.method !== 'POST') { next(); return; }
 

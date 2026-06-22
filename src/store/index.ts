@@ -13,6 +13,10 @@ interface KadoStore {
   globalShopMode: boolean
   setGlobalShopMode: (mode: boolean) => void
 
+  // Voice Mode
+  voiceModeOpen: boolean
+  setVoiceModeOpen: (open: boolean) => void
+
   // History
   sessions: ChatSession[]
   activeSessionId: string | null
@@ -63,6 +67,9 @@ export const useStore = create<KadoStore>()(
     (set, get) => ({
       globalShopMode: false,
       setGlobalShopMode: (mode) => set({ globalShopMode: mode }),
+
+      voiceModeOpen: false,
+      setVoiceModeOpen: (open) => set({ voiceModeOpen: open }),
 
       messages: [],
       addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),

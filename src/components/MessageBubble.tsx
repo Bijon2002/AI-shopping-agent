@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, CreditCard, CheckCircle, Receipt } from 'lucide-react';
+import { ExternalLink, CreditCard, CheckCircle, Receipt, Package } from 'lucide-react';
 import ProductCarousel from './ProductCarousel';
 import OrderTracker from './OrderTracker';
 import type { Message } from '../types';
@@ -139,6 +139,13 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
               <span className="text-[8px] sm:text-[9px] block uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Reference</span>
               <span className="font-display font-bold text-base sm:text-lg gradient-text">#{msg.orderNumber}</span>
             </div>
+            <button 
+              onClick={() => onSend && onSend(`Track order #${msg.orderNumber}`)}
+              className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}
+            >
+              <Package size={14} /> Track Order
+            </button>
           </motion.div>
         )}
 
