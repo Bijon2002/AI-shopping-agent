@@ -1,4 +1,6 @@
 import type { OrderPayload, KaprukProduct } from '../types';
+import { filterMismatchedProducts } from './occasion-engine';
+import type { OccasionInfo } from './occasion-engine';
 
 // All MCP calls go through our Vite Node.js plugin (no CORS, session managed there)
 const API_BASE = '/api/mcp-call';
@@ -48,6 +50,14 @@ async function callMCPTool(toolName: string, args: Record<string, unknown>) {
   }
 }
 
+// ── Shared occasion context (set by ChatShell before each request) ──────────
+let _currentOccasion: OccasionInfo | null = null;
+
+/** Call this before every LLM request to inject the current occasion context */
+export function setCurrentOccasion(occasion: OccasionInfo | null) {
+  _currentOccasion = occasion;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 // The Kapruka MCP server uses FastMCP. ALL functions are defined with a `params: Model` signature,
 // which means EVERY tool call must wrap its parameters inside a `{ params: { ... } }` object.
@@ -76,7 +86,7 @@ export const searchProducts = async (
     return { error: raw, products: [] };
   }
   
-  const products: KaprukProduct[] = (raw?.results ?? []).map((p: any) => ({
+  let products: KaprukProduct[] = (raw?.results ?? []).map((p: any) => ({
     id: p.id,
     name: p.name,
     price: p.price?.amount ?? 0,
@@ -86,6 +96,17 @@ export const searchProducts = async (
     description: p.summary ?? undefined,
     rating: p.rating ?? undefined,
   }));
+
+  // ═══ FIX #2: Post-search occasion filter ═══
+  // Remove products that are obviously mismatched with the detected occasion.
+  // e.g. "Father's Day" cards when the user is shopping for Amma.
+  const before = products.length;
+  products = filterMismatchedProducts(products, _currentOccasion);
+  if (products.length < before) {
+    console.debug(
+      `[MCP] Occasion filter removed ${before - products.length} mismatched product(s) for "${_currentOccasion?.name}"`
+    );
+  }
 
   return { products };
 };

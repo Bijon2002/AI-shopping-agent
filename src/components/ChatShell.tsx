@@ -10,7 +10,8 @@ import HistoryDrawer from './HistoryDrawer';
 import { useStore } from '../store';
 import { useTheme } from './ThemeProvider';
 import { sendMessage } from '../lib/openrouter';
-import { detectOccasion, getSystemContextNote } from '../lib/occasion-engine';
+import { detectOccasion, getSystemContextNote, getSearchGuidance, OCCASIONS } from '../lib/occasion-engine';
+import { setCurrentOccasion } from '../lib/kapruka-mcp';
 
 export default function ChatShell() {
   const {
@@ -85,8 +86,17 @@ export default function ChatShell() {
     setIsLoading(true);
     setCurrentToolName(null);
 
-    const occasion = detectOccasion(text);
-    if (occasion) setDetectedOccasion(occasion.name);
+    // Detect occasion from this message, or carry over from earlier in conversation
+    let occasion = detectOccasion(text);
+    if (occasion) {
+      setDetectedOccasion(occasion.name);
+    } else if (detectedOccasion) {
+      // Carry over the previously detected occasion (e.g. user said "amma" earlier)
+      occasion = OCCASIONS.find(o => o.name === detectedOccasion) ?? null;
+    }
+
+    // ═══ FIX #2+3: Set the active occasion on the MCP module for post-search filtering
+    setCurrentOccasion(occasion);
 
     addMessage({ id: crypto.randomUUID(), role: 'assistant', text: '' });
 
@@ -122,7 +132,11 @@ export default function ChatShell() {
       historyPayload.push({ role: 'user', content: text });
     }
 
-    if (occasion) historyPayload.push({ role: 'user', content: getSystemContextNote(occasion) });
+    if (occasion) {
+      historyPayload.push({ role: 'user', content: getSystemContextNote(occasion) });
+      // ═══ FIX #3: Inject search guidance with preferred queries & negative keywords
+      historyPayload.push({ role: 'user', content: getSearchGuidance(occasion) });
+    }
 
     if (cart.length > 0) {
       const cartContext = `[SYSTEM STATE - CART SUMMARY]\nThe user currently has ${cartCount} items in their cart:\n` +

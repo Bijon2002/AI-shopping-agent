@@ -227,7 +227,31 @@ function mcpPlugin(): Plugin {
   };
 }
 
+// ── Sitemap Date Plugin ──────────────────────────────────────────────────────
+// Automatically updates <lastmod> in sitemap.xml to today's date at build time.
+function sitemapDatePlugin(): Plugin {
+  return {
+    name: 'sitemap-date-plugin',
+    generateBundle(_options, bundle) {
+      // sitemap.xml is copied from public/ into the bundle as an asset
+      for (const [fileName, asset] of Object.entries(bundle)) {
+        if (fileName === 'sitemap.xml' && asset.type === 'asset') {
+          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+          const original = typeof asset.source === 'string'
+            ? asset.source
+            : new TextDecoder().decode(asset.source as Uint8Array);
+          asset.source = original.replace(
+            /<lastmod>[^<]*<\/lastmod>/g,
+            `<lastmod>${today}</lastmod>`
+          );
+          console.log(`[sitemap-date-plugin] Updated <lastmod> → ${today}`);
+        }
+      }
+    },
+  };
+}
+
 // ── Vite Config ───────────────────────────────────────────────────────────────
 export default defineConfig({
-  plugins: [react(), tailwindcss(), mcpPlugin()],
+  plugins: [react(), tailwindcss(), mcpPlugin(), sitemapDatePlugin()],
 });
