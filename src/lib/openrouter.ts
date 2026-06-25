@@ -115,7 +115,7 @@ DATE VALIDATION RULES (apply these strictly):
           messages: currentMessages,
           tools: KAPRUKA_TOOLS,
           tool_choice: 'auto',
-          max_tokens: 600,
+          max_tokens: 900,
           stream: true,
         }),
       });

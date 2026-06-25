@@ -1,7 +1,6 @@
 import { ThemeProvider } from './components/ThemeProvider';
 import ChatShell from './components/ChatShell';
 import { Toaster } from 'react-hot-toast';
-import WhatsAppButton from './components/WhatsAppButton';
 
 function App() {
   return (
@@ -20,7 +19,6 @@ function App() {
           },
         }}
       />
-      <WhatsAppButton />
     </ThemeProvider>
   );
 }
