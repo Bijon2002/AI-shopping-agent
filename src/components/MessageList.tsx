@@ -34,9 +34,11 @@ export default function MessageList({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading, currentToolName]);
 
+  const userMessagesCount = messages.filter(m => m.role === 'user').length;
+
   return (
     <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-2">
-      {messages.length === 0 ? (
+      {userMessagesCount === 0 ? (
         /* ═══ WELCOME SCREEN ═══ */
         <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-3 sm:space-y-4 animate-fade-in">
 
@@ -85,6 +87,9 @@ export default function MessageList({
             </p>
           </div>
 
+          {/* Active Voice/System connection status cards */}
+
+
           {/* Quick Start Chips */}
           <div className="w-full space-y-1.5 sm:space-y-2">
             <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: 'var(--text-muted)' }}>
@@ -131,7 +136,7 @@ export default function MessageList({
             </motion.button>
           </div>
 
-          {messages.map((msg) => (
+          {messages.filter(m => !m.text || !m.text.includes('Live buddy connected')).map((msg) => (
             <MessageBubble key={msg.id} msg={msg} onSend={onSend} />
           ))}
 

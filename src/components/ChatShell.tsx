@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Headphones } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Sparkles, User } from 'lucide-react';
 import MessageList from './MessageList';
 import VoiceMode from './VoiceMode';
 import ChatInput from './ChatInput';
 import CartDrawer from './CartDrawer';
 import WishlistDrawer from './WishlistDrawer';
 import HistoryDrawer from './HistoryDrawer';
+import LanguageSelector from './LanguageSelector';
+import ProfileDrawer from './ProfileDrawer';
+import ProductDetailsModal from './ProductDetailsModal';
 import { useStore } from '../store';
 import { useTheme } from './ThemeProvider';
 import { sendMessage } from '../lib/openrouter';
 import { detectOccasion, getSystemContextNote, getSearchGuidance, OCCASIONS } from '../lib/occasion-engine';
 import { setCurrentOccasion } from '../lib/kapruka-mcp';
+import { toast } from 'react-hot-toast';
+import { translations } from '../lib/translations';
 
 export default function ChatShell() {
   const {
@@ -21,8 +26,13 @@ export default function ChatShell() {
     detectedOccasion, setDetectedOccasion,
     globalShopMode, setGlobalShopMode,
     voiceModeOpen, setVoiceModeOpen,
-    clearCart, removeFromCart
+    clearCart, removeFromCart,
+    language, setLanguage, setShowLanguageSelector,
+    profileOpen, setProfileOpen,
+    savedPeople, preferences
   } = useStore();
+
+  const t = translations[language] || translations.en;
 
   const { isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
@@ -30,8 +40,21 @@ export default function ChatShell() {
   const [voiceOutput, setVoiceOutput] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGlobalDragging, setIsGlobalDragging] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('kado-info-dismissed');
+    if (!dismissed) {
+      setShowInfoModal(true);
+    }
+  }, []);
 
   const processImageFile = (file: File) => {
+    if (messages.some(m => m.image)) {
+      toast.error("Only one image can be uploaded for one chat session!");
+      return;
+    }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
@@ -131,6 +154,18 @@ export default function ChatShell() {
     } else {
       historyPayload.push({ role: 'user', content: text });
     }
+
+    // Inject user profile details, dietary restrictions, and preferred language dynamically to guide the LLM
+    const prefContext = `[USER PROFILE & SETTINGS]
+- Preferred Interface Language: ${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'}
+- Saved Recipients: ${savedPeople.map(p => `${p.name} (${p.relation}${p.birthday ? `, Birthday: ${p.birthday}` : ''})`).join(', ') || 'None'}
+- Dietary Preferences: ${(preferences.dietary || []).join(', ') || 'None'}
+- General Budget: LKR ${preferences.budgetMin || 0} to LKR ${preferences.budgetMax || 100000}
+- Shopping Notes: ${preferences.notes || 'None'}
+
+Please remember to respond in the user's preferred language/dialect, and use these saved recipient relations (e.g. if the user says "Amma", they refer to the recipient named ${savedPeople.find(p => p.relation.toLowerCase() === 'mother' || p.relation.toLowerCase() === 'amma')?.name || 'Amma'}) and dietary restrictions automatically when suggesting products!`;
+
+    historyPayload.push({ role: 'user', content: prefContext });
 
     if (occasion) {
       historyPayload.push({ role: 'user', content: getSystemContextNote(occasion) });
@@ -270,7 +305,7 @@ export default function ChatShell() {
         >
           <img src="/kado-logo.png" alt="Kapruka" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover shadow-xl animate-glow" />
           <div>
-            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">Kapruka</h1>
+            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">{t.appTitle}</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               {detectedOccasion ? (
                 <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -279,7 +314,7 @@ export default function ChatShell() {
                 </motion.span>
               ) : (
                 <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest hidden sm:inline" style={{ color: 'var(--text-muted)' }}>
-                  Smart Shopping Oracle
+                  {t.subtitle}
                 </span>
               )}
             </div>
@@ -287,18 +322,35 @@ export default function ChatShell() {
         </button>
 
         <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Language Switcher */}
+          <button
+            onClick={() => setShowLanguageSelector(true)}
+            className="px-2 py-1.5 sm:px-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-muted)'
+            }}
+            title={t.language}
+          >
+            <Globe size={13} className="text-Kapruka-orange" />
+            <span>{language}</span>
+          </button>
 
-          {/* Voice Mode Toggle */}
-          <button onClick={() => setVoiceModeOpen(!voiceModeOpen)}
+          {/* Profile / Saved Info Button */}
+          <button
+            onClick={() => setProfileOpen(true)}
             className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t relative"
             style={{
-              background: voiceModeOpen ? 'linear-gradient(135deg, #A855F7, #EC4899)' : 'var(--bg-surface)',
+              background: profileOpen ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)',
               border: '1px solid var(--border-default)',
-              color: voiceModeOpen ? '#fff' : 'var(--text-muted)'
-            }}>
-            {voiceModeOpen && <span className="absolute inset-0 rounded-lg sm:rounded-xl bg-purple-500/20 animate-ping pointer-events-none" />}
-            <Headphones size={16} />
+              color: profileOpen ? 'var(--Kapruka-orange)' : 'var(--text-muted)'
+            }}
+            title={t.profile}
+          >
+            <User size={16} />
           </button>
+
 
           {/* TTS Toggle */}
           <button onClick={() => setVoiceOutput(!voiceOutput)}
@@ -357,22 +409,197 @@ export default function ChatShell() {
         </div>
       </header>
 
-      {/* ═══ Chat Area ═══ */}
-      <main className="flex-1 overflow-hidden flex flex-col z-10 relative">
-        <MessageList isLoading={isLoading} currentToolName={currentToolName} onSend={handleSendMessage} />
-        <ChatInput onSend={handleSendMessage} disabled={isLoading} image={uploadedImage} setImage={setUploadedImage} />
+      {/* ═══ Main Container ═══ */}
+      <div className="flex-1 flex w-full overflow-hidden relative z-10">
+        {/* Chat Area */}
+        <main className="flex-1 overflow-hidden flex flex-col relative">
+          <MessageList isLoading={isLoading} currentToolName={currentToolName} onSend={handleSendMessage} />
+          <ChatInput onSend={handleSendMessage} disabled={isLoading} image={uploadedImage} setImage={setUploadedImage} />
 
-        <div className="text-center text-[10px] sm:text-xs pb-2 sm:pb-3 z-10 flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-          <Code size={12} className="text-Kapruka-orange opacity-80" />
-          <span>Developed by <a href="https://bijonn.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange hover:underline font-bold tracking-wide">BIJON</a></span>
-        </div>
-      </main>
+          <div className="text-center text-[10px] sm:text-xs pb-2 sm:pb-3 flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <Code size={12} className="text-Kapruka-orange opacity-80" />
+            <span>Developed by <a href="https://bijonn.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange hover:underline font-bold tracking-wide">BIJON</a></span>
+          </div>
+        </main>
+
+        {/* Desktop Voice Mode Sidebar */}
+        <AnimatePresence>
+          {voiceModeOpen && (
+            <motion.div 
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 360, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="hidden lg:block w-[360px] h-full flex-none border-l relative overflow-hidden z-20"
+              style={{ borderColor: 'var(--border-default)', background: 'var(--bg-base)' }}
+            >
+              <VoiceMode inline={true} onClose={() => setVoiceModeOpen(false)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <AnimatePresence>
         {cartOpen && <CartDrawer />}
         {wishlistOpen && <WishlistDrawer />}
         {historyOpen && <HistoryDrawer />}
-        {voiceModeOpen && <VoiceMode onClose={() => setVoiceModeOpen(false)} onSend={handleSendMessage} />}
+        {profileOpen && <ProfileDrawer />}
+        <LanguageSelector />
+        <ProductDetailsModal />
+        {voiceModeOpen && (
+          <div className="lg:hidden">
+            <VoiceMode onClose={() => setVoiceModeOpen(false)} />
+          </div>
+        )}
+
+
+        {/* ═══ Info Modal ═══ */}
+        {showInfoModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.92, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.92, y: 15 }}
+              className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh]"
+              style={{ background: 'linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(9,9,11,0.95) 100%)' }}
+            >
+              {/* Background ambient glow inside the card */}
+              <div className="absolute top-[-20%] left-[-20%] w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-[80px] pointer-events-none" />
+              <div className="absolute bottom-[-10%] right-[-10%] w-[250px] h-[250px] rounded-full bg-Kapruka-orange/10 blur-[60px] pointer-events-none" />
+
+              {/* Decorative top gradient bar */}
+              <div className="h-[3px] w-full bg-gradient-to-r from-purple-500 via-Kapruka-orange to-Kapruka-gold" />
+
+              <div className="p-6 sm:p-10 flex flex-col h-full overflow-y-auto custom-scrollbar relative z-10">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3.5 rounded-[1.25rem] bg-gradient-to-br from-Kapruka-orange to-orange-500 text-white shadow-lg">
+                      <Sparkles size={26} className="animate-pulse" />
+                    </div>
+                    <div>
+                      <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+                        Kapruka AI Buddy
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-purple-500/25 text-purple-300 border border-purple-500/20">
+                          v1.2 Live
+                        </span>
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-Kapruka-orange/20 text-orange-300 border border-Kapruka-orange/20">
+                          100% Conversational
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Verified Developer Badge */}
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-white/5 bg-white/5 w-fit shadow-inner">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="text-[10px] font-bold tracking-wider text-white/70 uppercase">
+                      Developer: <span className="text-Kapruka-orange font-black">BIJON</span>
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-sm leading-relaxed mb-6 text-white/70">
+                  Aney machang! Welcome to your real-time Sri Lankan shopping companion. I can speak Sinhala/Singlish, Tamil/Tanglish, or English. Here are all the powerful features I have built in for you:
+                </p>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  {/* Feature 1 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
+                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">🎙️</span>
+                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Gemini Live Voice Mode</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Native bidirectional real-time conversation. Talk freely, and I will respond instantly via audio with responsive visualizers.
+                    </p>
+                  </div>
+
+                  {/* Feature 2 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
+                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">🍰</span>
+                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Smart Product Search</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Query Kapruka cakes, rose bouquets, Java chocolates, teddy bears, grocery packs, and cards using intelligent occasion filtering.
+                    </p>
+                  </div>
+
+                  {/* Feature 3 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
+                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">🇱🇰</span>
+                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Multilingual Mirroring</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Built to respond in the exact language/dialect you write. Full support for Singlish and Tanglish with local slang.
+                    </p>
+                  </div>
+
+                  {/* Feature 4 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
+                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">📦</span>
+                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Frictionless Checkout</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Complete guest checkout in under 2 minutes: select city, verify date, add recipient details, and generate invoice paylinks.
+                    </p>
+                  </div>
+
+                  {/* Feature 5 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
+                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">✈️</span>
+                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Amazon & eBay Extension</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Paste global shopping links directly into chat to automatically estimate total landed shipping cost to Sri Lanka.
+                    </p>
+                  </div>
+
+                  {/* Feature 6 */}
+                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
+                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                      <span className="text-lg">🖼️</span>
+                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Vision Search (1 Limit)</span>
+                    </div>
+                    <p className="text-[11px] leading-normal text-white/50">
+                      Upload an image, and I will scan for visually matching items. Restricted to exactly 1 image upload per chat session.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="mt-auto border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="text-[10px] text-white/40 leading-relaxed max-w-xs text-center sm:text-left">
+                    By clicking continue, you agree to allow browser microphone access for Live Voice Mode.
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(255,107,43,0.3)' }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => {
+                      localStorage.setItem('kado-info-dismissed', 'true');
+                      setShowInfoModal(false);
+                    }}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-Kapruka-orange via-orange-500 to-amber-500 text-white font-black text-sm shadow-[0_8px_30px_rgba(255,107,43,0.35)] cursor-pointer tracking-wider"
+                  >
+                    OK, Let's Shop!
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

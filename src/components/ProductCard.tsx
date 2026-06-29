@@ -1,17 +1,23 @@
 import { motion } from 'framer-motion';
-import { ShoppingCart, Star, Check, Heart } from 'lucide-react';
+import { ShoppingCart, Star, Check, Heart, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from '../store';
 import type { KaprukProduct } from '../types';
+import { translations } from '../lib/translations';
 
 export default function ProductCard({ product, onSend }: { product: KaprukProduct, onSend?: (t: string) => void }) {
   const addToCart = useStore((s) => s.addToCart);
   const toggleWishlist = useStore((s) => s.toggleWishlist);
   const isWishlisted = useStore((s) => s.isWishlisted);
+  const setSelectedProductDetails = useStore((s) => s.setSelectedProductDetails);
+  const language = useStore((s) => s.language);
+  const t = translations[language] || translations.en;
+
   const [addedToCart, setAddedToCart] = useState(false);
   const wishlisted = isWishlisted(product.id);
 
   const handleAdd = (e: React.MouseEvent) => {
+
     e.stopPropagation();
     addToCart(product);
     setAddedToCart(true);
@@ -78,7 +84,7 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
       </div>
 
       {/* Info */}
-      <div className="p-2.5 sm:p-3 space-y-2 flex flex-col justify-between h-[90px] sm:h-[105px]">
+      <div className="p-2.5 sm:p-3 space-y-2 flex flex-col justify-between h-[95px] sm:h-[110px]">
         <div>
           <p className="text-[11px] sm:text-xs font-semibold leading-tight line-clamp-2" style={{ color: 'var(--text-primary)' }}>
             {product.name}
@@ -94,12 +100,29 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
           )}
         </div>
 
-        <motion.button whileTap={{ scale: 0.92 }} onClick={handleAdd} disabled={!product.in_stock}
-          className={`w-full flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 disabled:opacity-25 ${
-            addedToCart ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'btn-primary rounded-lg'
-          }`}>
-          {addedToCart ? <><Check size={11} /> Added!</> : <><ShoppingCart size={11} className="relative z-10" /> <span className="relative z-10">Add to Cart</span></>}
-        </motion.button>
+        <div className="flex gap-1.5 mt-1">
+          {/* View Details Button */}
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedProductDetails(product);
+            }}
+            className="flex-none p-1.5 sm:p-2 rounded-lg text-[10px] font-bold border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-1 text-white"
+            title={t.viewDetails}
+          >
+            <Eye size={12} />
+            <span className="hidden sm:inline">{t.viewDetails}</span>
+          </motion.button>
+
+          {/* Add to Cart Button */}
+          <motion.button whileTap={{ scale: 0.92 }} onClick={handleAdd} disabled={!product.in_stock}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 disabled:opacity-25 ${
+              addedToCart ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'btn-primary rounded-lg text-white'
+            }`}>
+            {addedToCart ? <><Check size={11} /> {t.added}</> : <><ShoppingCart size={11} className="relative z-10" /> <span className="relative z-10">{t.addToCart}</span></>}
+          </motion.button>
+        </div>
       </div>
     </motion.div>
   );

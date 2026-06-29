@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { KaprukProduct, Message, CartItem, ChatSession } from '../types'
+import type { KaprukProduct, Message, CartItem, ChatSession, SavedAddress, SavedPerson, UserPreferences } from '../types'
 
 interface KadoStore {
   // Chat
@@ -48,6 +48,30 @@ interface KadoStore {
   // Occasion Engine detected context
   detectedOccasion: string | null
   setDetectedOccasion: (occ: string | null) => void
+
+  // Language Preferences
+  language: 'en' | 'si' | 'ta'
+  setLanguage: (lang: 'en' | 'si' | 'ta') => void
+  showLanguageSelector: boolean
+  setShowLanguageSelector: (show: boolean) => void
+
+  // Profile Drawer
+  profileOpen: boolean
+  setProfileOpen: (open: boolean) => void
+
+  // Saved Data
+  savedAddresses: SavedAddress[]
+  addSavedAddress: (addr: SavedAddress) => void
+  deleteSavedAddress: (id: string) => void
+  savedPeople: SavedPerson[]
+  addSavedPerson: (p: SavedPerson) => void
+  deleteSavedPerson: (id: string) => void
+  preferences: UserPreferences
+  updatePreferences: (pref: Partial<UserPreferences>) => void
+
+  // Selected Product Details
+  selectedProductDetails: KaprukProduct | null
+  setSelectedProductDetails: (product: KaprukProduct | null) => void
 }
 
 // Load wishlist from localStorage
@@ -177,6 +201,30 @@ export const useStore = create<KadoStore>()(
   
   detectedOccasion: null,
   setDetectedOccasion: (occ) => set({ detectedOccasion: occ }),
+
+  // Language Preferences
+  language: 'en',
+  setLanguage: (lang) => set({ language: lang }),
+  showLanguageSelector: false,
+  setShowLanguageSelector: (show) => set({ showLanguageSelector: show }),
+
+  // Profile Drawer
+  profileOpen: false,
+  setProfileOpen: (open) => set({ profileOpen: open }),
+
+  // Saved Data
+  savedAddresses: [],
+  addSavedAddress: (addr) => set((s) => ({ savedAddresses: [...s.savedAddresses, addr] })),
+  deleteSavedAddress: (id) => set((s) => ({ savedAddresses: s.savedAddresses.filter(a => a.id !== id) })),
+  savedPeople: [],
+  addSavedPerson: (p) => set((s) => ({ savedPeople: [...s.savedPeople, p] })),
+  deleteSavedPerson: (id) => set((s) => ({ savedPeople: s.savedPeople.filter(p => p.id !== id) })),
+  preferences: { dietary: [], budgetMin: 0, budgetMax: 100000, notes: '' },
+  updatePreferences: (pref) => set((s) => ({ preferences: { ...s.preferences, ...pref } })),
+
+  // Selected Product Details
+  selectedProductDetails: null,
+  setSelectedProductDetails: (product) => set({ selectedProductDetails: product }),
     }),
     {
       name: 'Kapruka-storage', // name of the item in the storage (must be unique)
@@ -184,8 +232,13 @@ export const useStore = create<KadoStore>()(
         sessions: state.sessions, 
         activeSessionId: state.activeSessionId, 
         messages: state.messages,
-        cart: state.cart // let's persist cart too!
+        cart: state.cart, // let's persist cart too!
+        language: state.language,
+        savedAddresses: state.savedAddresses,
+        savedPeople: state.savedPeople,
+        preferences: state.preferences
       }), // only persist these fields
     }
+
   )
 )

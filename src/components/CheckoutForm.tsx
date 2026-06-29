@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { listDeliveryCities, createOrder } from '../lib/kapruka-mcp';
 import DeliveryCalendar from './DeliveryCalendar';
 import GiftComposer from './GiftComposer';
-import { Loader2, Search, MapPin, Phone, User, Sparkles, AlertCircle } from 'lucide-react';
+import { Loader2, Search, MapPin, Phone, User, Sparkles, AlertCircle, Bookmark } from 'lucide-react';
 import type { CartItem, OrderPayload } from '../types';
+import { useStore } from '../store';
+import { translations } from '../lib/translations';
 
 export default function CheckoutForm({
   cartItems,
@@ -13,6 +15,9 @@ export default function CheckoutForm({
   cartItems: CartItem[];
   onComplete: (payUrl: string, orderNumber: string) => void;
 }) {
+  const { language, savedAddresses, savedPeople } = useStore();
+  const t = translations[language] || translations.en;
+
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [cityInput, setCityInput] = useState('');
@@ -26,6 +31,7 @@ export default function CheckoutForm({
   const [giftMessage, setGiftMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
 
   useEffect(() => {
     if (cityInput.length < 2 || cityInput === selectedCity) { setCitySuggestions([]); return; }
@@ -81,26 +87,47 @@ export default function CheckoutForm({
 
       {/* Section 1 */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' }}>1</span>
-          <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>Recipient</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' }}>1</span>
+            <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>{t.recipientSection}</h3>
+          </div>
         </div>
+
+        {/* Quick select saved recipient */}
+        {savedPeople.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 items-center">
+            <Bookmark size={11} className="text-Kapruka-orange ml-1" />
+            <span className="text-[9px] text-white/40 uppercase mr-1">{t.useSavedProfile}:</span>
+            {savedPeople.map((person) => (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => setRecipientName(person.name)}
+                className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] hover:bg-Kapruka-orange/15 hover:border-Kapruka-orange transition-all font-semibold"
+              >
+                {person.name} ({person.relation})
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="space-y-1">
-            <label className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Name *</label>
+            <label className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>{t.nameLabel}</label>
             <div className="relative input-glow rounded-xl">
               <User size={12} className="absolute left-3 top-3" style={{ color: 'var(--text-muted)' }} />
               <input type="text" required value={recipientName} onChange={e => setRecipientName(e.target.value)}
-                placeholder="Name" className={`${inputCls} pl-8 pr-3`}
+                placeholder={t.nameLabel} className={`${inputCls} pl-8 pr-3`}
                 style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Phone *</label>
+            <label className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>{t.phoneLabel}</label>
             <div className="relative input-glow rounded-xl">
               <Phone size={12} className="absolute left-3 top-3" style={{ color: 'var(--text-muted)' }} />
               <input type="tel" required value={recipientPhone} onChange={e => setRecipientPhone(e.target.value)}
-                placeholder="0771234567" className={`${inputCls} pl-8 pr-3`}
+                placeholder={t.phonePlaceholder} className={`${inputCls} pl-8 pr-3`}
                 style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
             </div>
           </div>
@@ -109,13 +136,40 @@ export default function CheckoutForm({
 
       {/* Section 2 */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' }}>2</span>
-          <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>Delivery</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' }}>2</span>
+            <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>{t.deliverySection}</h3>
+          </div>
         </div>
+
+        {/* Quick select saved address */}
+        {savedAddresses.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/[0.02] border border-white/5 items-center">
+            <Bookmark size={11} className="text-Kapruka-orange ml-1" />
+            <span className="text-[9px] text-white/40 uppercase mr-1">{t.useSavedAddress}:</span>
+            {savedAddresses.map((addr) => (
+              <button
+                key={addr.id}
+                type="button"
+                onClick={() => {
+                  setRecipientName(addr.name);
+                  setRecipientPhone(addr.phone);
+                  setAddress(addr.street);
+                  setSelectedCity(addr.city);
+                  setCityInput(addr.city);
+                }}
+                className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] hover:bg-Kapruka-orange/15 hover:border-Kapruka-orange transition-all font-semibold"
+              >
+                {addr.name} - {addr.city}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-2.5">
           <div className="relative">
-            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>City *</label>
+            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>{t.cityLabel}</label>
             <div className="relative input-glow rounded-xl">
               <Search size={12} className="absolute left-3 top-3" style={{ color: 'var(--text-muted)' }} />
               <input type="text" required value={cityInput}
@@ -136,11 +190,11 @@ export default function CheckoutForm({
             )}
           </div>
           <div>
-            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Address *</label>
+            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>{t.addressLabel}</label>
             <div className="relative input-glow rounded-xl">
               <MapPin size={12} className="absolute left-3 top-3" style={{ color: 'var(--text-muted)' }} />
               <input type="text" required value={address} onChange={e => setAddress(e.target.value)}
-                placeholder="House number, street" className={`${inputCls} pl-8 pr-3`}
+                placeholder={t.addressPlaceholder} className={`${inputCls} pl-8 pr-3`}
                 style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
             </div>
           </div>
@@ -152,13 +206,13 @@ export default function CheckoutForm({
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <span className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' }}>3</span>
-          <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>Sender & Message</h3>
+          <h3 className="text-xs uppercase font-bold tracking-wider" style={{ color: 'var(--text-primary)' }}>{t.senderSection}</h3>
         </div>
         <div className="space-y-2.5">
           <div>
-            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Your Name *</label>
+            <label className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>{t.yourNameLabel}</label>
             <input type="text" required value={senderName} onChange={e => setSenderName(e.target.value)}
-              placeholder="Your name" className={`${inputCls} px-3 input-glow`}
+              placeholder={t.yourNameLabel} className={`${inputCls} px-3 input-glow`}
               style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
           </div>
           <GiftComposer value={giftMessage} onChange={setGiftMessage} />
@@ -171,9 +225,10 @@ export default function CheckoutForm({
         className="w-full mt-2 flex items-center justify-center gap-2 py-3.5 text-white font-display font-extrabold text-sm rounded-xl shadow-xl btn-primary disabled:opacity-40 relative overflow-hidden"
       >
         <span className="relative z-10 flex items-center gap-2">
-          {loading ? <><Loader2 size={16} className="animate-spin" /> Creating Order…</> : <><Sparkles size={16} /> Place Order</>}
+          {loading ? <><Loader2 size={16} className="animate-spin" /> {t.creatingOrder}</> : <><Sparkles size={16} /> {t.placeOrder}</>}
         </span>
       </motion.button>
     </form>
   );
 }
+

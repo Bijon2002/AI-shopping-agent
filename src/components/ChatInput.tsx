@@ -1,6 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, ImagePlus, X } from 'lucide-react';
+
+import { useStore } from '../store';
+import { Headphones } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function ChatInput({
   onSend, disabled, image, setImage,
@@ -16,25 +20,8 @@ export default function ChatInput({
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SR) {
-      const rec = new SR();
-      rec.continuous = false; 
-      rec.interimResults = false; 
-      rec.lang = 'en-US';
-      rec.onresult = (e: any) => { 
-        const t = e.results[0][0].transcript; 
-        if (t) setText(p => (p + ' ' + t).trim()); 
-      };
-      rec.onerror = (event: any) => {
-        setIsListening(false);
-        if (event.error === 'no-speech' || event.error === 'aborted') return;
-      };
-      rec.onend = () => setIsListening(false);
-      recognitionRef.current = rec;
-    }
-  }, []);
+  const { messages, voiceModeOpen, setVoiceModeOpen } = useStore();
+  const alreadyHasImage = messages.some(m => m.image);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +32,14 @@ export default function ChatInput({
   };
 
   const processImageFile = (file: File) => {
+    if (alreadyHasImage) {
+      toast.error("Only one image can be uploaded for one chat session!");
+      return;
+    }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      
-      // Scale down if image is too huge (optional, but helps with base64 size limits)
       let { width, height } = img;
       const MAX_SIZE = 1500;
       if (width > MAX_SIZE || height > MAX_SIZE) {
@@ -62,15 +51,14 @@ export default function ChatInput({
           height = MAX_SIZE;
         }
       }
-      
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.fillStyle = '#FFFFFF'; // ensure transparent backgrounds become white
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, width, height);
-        setImage(canvas.toDataURL('image/jpeg', 0.8)); // always send JPEG
+        setImage(canvas.toDataURL('image/jpeg', 0.8));
       }
       URL.revokeObjectURL(url);
     };
@@ -86,22 +74,88 @@ export default function ChatInput({
     if (file) {
       processImageFile(file);
     }
-    // reset input so same file can be selected again
     if (e.target) e.target.value = '';
   };
 
   const toggleVoice = () => {
-    if (!recognitionRef.current) { alert("Speech Recognition not supported!"); return; }
-    if (isListening) recognitionRef.current.stop();
-    else { setIsListening(true); recognitionRef.current.start(); }
+    // Prevent conflict with Gemini Live voice mode which uses the microphone.
+    if (voiceModeOpen) {
+      alert('Close Gemini Live Voice Buddy before using voice dictation.');
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { alert('Speech Recognition not supported in this browser. Try Chrome!'); return; }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) { console.error(e); }
+      }
+      setIsListening(false);
+    } else {
+      // Request microphone permission first
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          setIsListening(true);
+          const rec = new SR();
+          rec.continuous = false;
+          rec.interimResults = false;
+          rec.lang = 'en-US';
+
+          rec.onresult = (e: any) => {
+            const t = e.results[0][0].transcript;
+            if (t) setText(p => (p + ' ' + t).trim());
+          };
+
+          rec.onerror = (event: any) => {
+            console.error('[ChatInput] Speech recognition error:', event.error);
+            setIsListening(false);
+          };
+
+          rec.onend = () => {
+            setIsListening(false);
+            recognitionRef.current = null;
+          };
+
+          recognitionRef.current = rec;
+          try { rec.start(); } catch (err) {
+            console.error('[ChatInput] Speech recognition start failed:', err);
+            setIsListening(false);
+          }
+        })
+        .catch(err => {
+          console.error('[ChatInput] Microphone permission denied:', err);
+          alert('Microphone access is required for voice dictation. Please allow microphone permissions.');
+        });
+    }
+  };
+
+  const handleImageClick = () => {
+    if (alreadyHasImage) {
+      toast.error("Only one image can be uploaded for one chat session!");
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   return (
     <form onSubmit={handleSend}
       className={`flex-none px-3 sm:px-6 py-2.5 sm:py-4 max-w-2xl w-full mx-auto flex items-center gap-2 sm:gap-2.5 relative z-10 transition-all rounded-2xl border-2 border-transparent`}>
 
-      {/* Voice */}
+      {/* Gemini Live Voice Mode button */}
+      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => setVoiceModeOpen(!voiceModeOpen)}
+        title="Open Gemini Live Voice Buddy"
+        className="flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl relative transition-all duration-300"
+        style={voiceModeOpen
+          ? { background: 'linear-gradient(135deg, #A855F7, #EC4899)', color: '#fff' }
+          : { background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }
+        }>
+        {voiceModeOpen && <span className="absolute inset-0 rounded-lg sm:rounded-xl bg-purple-500/20 animate-ping pointer-events-none" />}
+        <Headphones size={16} />
+      </motion.button>
+
+      {/* Local STT Voice typing */}
       <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={toggleVoice}
+        title="Voice Dictation"
         className="flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl relative transition-all duration-300"
         style={isListening
           ? { background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)', color: '#fff' }
@@ -118,9 +172,10 @@ export default function ChatInput({
 
       {/* Image Upload */}
       <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageUpload} />
-      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => fileInputRef.current?.click()}
+      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={handleImageClick}
         disabled={disabled}
-        className="flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-50"
+        title="Upload Image"
+        className={`flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-50 ${alreadyHasImage ? 'opacity-30' : ''}`}
         style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}>
         <ImagePlus size={16} />
       </motion.button>
@@ -151,7 +206,7 @@ export default function ChatInput({
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
           disabled={disabled}
-          placeholder={disabled ? "Kapruka is thinking..." : "Type here machang..."}
+          placeholder={disabled ? "Kapruka is thinking..." : "Ask Kapruka anything..."}
           className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors"
           style={{
             backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)',

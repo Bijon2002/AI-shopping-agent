@@ -54,3 +54,26 @@ export interface OrderPayload {
   };
   gift_message?: string;
 }
+
+export interface SavedAddress {
+  id: string;
+  name: string;
+  street: string;
+  city: string;
+  phone: string;
+}
+
+export interface SavedPerson {
+  id: string;
+  name: string;
+  relation: string;
+  birthday?: string;
+}
+
+export interface UserPreferences {
+  dietary: string[];
+  budgetMin: number;
+  budgetMax: number;
+  notes: string;
+}
+
