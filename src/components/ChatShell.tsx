@@ -27,7 +27,7 @@ export default function ChatShell() {
     globalShopMode, setGlobalShopMode,
     voiceModeOpen, setVoiceModeOpen,
     clearCart, removeFromCart,
-    language, setLanguage, setShowLanguageSelector,
+    language, setShowLanguageSelector,
     profileOpen, setProfileOpen,
     savedPeople, preferences,
     showInfoModal, setShowInfoModal

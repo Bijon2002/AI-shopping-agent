@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, MapPin, User, Tag, Heart, Save, DollarSign } from 'lucide-react';
+import { X, Plus, Trash2, MapPin, User, Heart, DollarSign } from 'lucide-react';
 import { useStore } from '../store';
 import { translations } from '../lib/translations';
 
