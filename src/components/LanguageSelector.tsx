@@ -6,7 +6,7 @@ import type { Language } from '../lib/translations';
 import { Globe, Sparkles } from 'lucide-react';
 
 export default function LanguageSelector() {
-  const { language, setLanguage, showLanguageSelector, setShowLanguageSelector } = useStore();
+  const { language, setLanguage, showLanguageSelector, setShowLanguageSelector, setShowInfoModal } = useStore();
 
   useEffect(() => {
     // If language is not selected in local storage, prompt user
@@ -23,6 +23,12 @@ export default function LanguageSelector() {
   const handleConfirm = () => {
     localStorage.setItem('Kapruka-language-selected', 'true');
     setShowLanguageSelector(false);
+    
+    // Automatically trigger Features onboarding modal if not dismissed yet
+    const dismissed = localStorage.getItem('kado-info-dismissed');
+    if (!dismissed) {
+      setShowInfoModal(true);
+    }
   };
 
   const t = translations[language] || translations.en;

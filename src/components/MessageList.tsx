@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import MessageBubble from './MessageBubble';
 import { useStore } from '../store';
 import { Sparkles, Calendar, Gift, Heart, Package, Trash2 } from 'lucide-react';
+import { translations } from '../lib/translations';
 
 interface QuickChip {
   label: string;
@@ -27,7 +28,7 @@ export default function MessageList({
   currentToolName: string | null;
   onSend: (text: string) => void;
 }) {
-  const { messages, clearMessages } = useStore();
+  const { messages, clearMessages, language } = useStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,15 +76,15 @@ export default function MessageList({
           </div>
 
           {/* Title */}
-          <div className="space-y-1 sm:space-y-1.5">
-            <h2 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight gradient-text leading-tight">
-              Ayubowan!
+          <div className="space-y-1.5 sm:space-y-2">
+            <h2 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight gradient-text leading-tight animate-pulse-soft">
+              {language === 'si' ? 'ආයුබෝවන්!' : language === 'ta' ? 'வணக்கம்!' : 'Ayubowan!'}
             </h2>
-            <h3 className="font-display font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>
-              I am <span className="gradient-text">Kapruka</span>, your Sri Lankan shopping companion
+            <h3 className="font-display font-bold text-xs sm:text-sm leading-snug text-white max-w-xs sm:max-w-sm mx-auto px-4">
+              {translations[language]?.welcomeTitle || translations.en.welcomeTitle}
             </h3>
-            <p className="text-[11px] sm:text-xs leading-relaxed max-w-xs sm:max-w-sm mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Tell me what you need — gifts, cakes, flowers, electronics — and I'll find the perfect item on Kapruka & deliver it anywhere in Sri Lanka! 🇱🇰
+            <p className="text-[10px] sm:text-xs leading-relaxed max-w-xs sm:max-w-sm mx-auto px-4" style={{ color: 'var(--text-muted)' }}>
+              {translations[language]?.welcomeSub || translations.en.welcomeSub}
             </p>
           </div>
 

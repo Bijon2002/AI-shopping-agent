@@ -72,6 +72,10 @@ interface KadoStore {
   // Selected Product Details
   selectedProductDetails: KaprukProduct | null
   setSelectedProductDetails: (product: KaprukProduct | null) => void
+
+  // Info/Features Modal
+  showInfoModal: boolean
+  setShowInfoModal: (show: boolean) => void
 }
 
 // Load wishlist from localStorage
@@ -225,6 +229,10 @@ export const useStore = create<KadoStore>()(
   // Selected Product Details
   selectedProductDetails: null,
   setSelectedProductDetails: (product) => set({ selectedProductDetails: product }),
+
+  // Info/Features Modal
+  showInfoModal: false,
+  setShowInfoModal: (show) => set({ showInfoModal: show }),
     }),
     {
       name: 'Kapruka-storage', // name of the item in the storage (must be unique)

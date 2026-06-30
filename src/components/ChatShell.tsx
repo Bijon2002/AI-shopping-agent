@@ -29,7 +29,8 @@ export default function ChatShell() {
     clearCart, removeFromCart,
     language, setLanguage, setShowLanguageSelector,
     profileOpen, setProfileOpen,
-    savedPeople, preferences
+    savedPeople, preferences,
+    showInfoModal, setShowInfoModal
   } = useStore();
 
   const t = translations[language] || translations.en;
@@ -40,15 +41,14 @@ export default function ChatShell() {
   const [voiceOutput, setVoiceOutput] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGlobalDragging, setIsGlobalDragging] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
-
 
   useEffect(() => {
     const dismissed = localStorage.getItem('kado-info-dismissed');
-    if (!dismissed) {
+    const langSelected = localStorage.getItem('Kapruka-language-selected');
+    if (!dismissed && langSelected) {
       setShowInfoModal(true);
     }
-  }, []);
+  }, [setShowInfoModal]);
 
   const processImageFile = (file: File) => {
     if (messages.some(m => m.image)) {
@@ -102,7 +102,8 @@ export default function ChatShell() {
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const wishlistCount = wishlist.length;
-  const isWelcome = messages.length === 0 && !isLoading;
+  const userMessagesCount = messages.filter(m => m.role === 'user').length;
+  const isWelcome = userMessagesCount === 0 && !isLoading;
 
   const handleSendMessage = async (text: string, image?: string, onFinish?: (text: string) => void) => {
     addMessage({ id: crypto.randomUUID(), role: 'user', text, image });
@@ -262,22 +263,20 @@ Please remember to respond in the user's preferred language/dialect, and use the
         </div>
       )}
 
-      {/* ═══ Video Background (welcome screen only) ═══ */}
-      {isWelcome && (
-        <div className="absolute inset-0 z-0">
-          <video
-            autoPlay muted loop playsInline
-            className="w-full h-full object-cover"
-            src="/bg.mp4"
-          />
-          {/* Dark overlay for readability */}
-          <div className="absolute inset-0" style={{
-            background: isDark
-              ? 'rgba(9,9,11,0.75)'
-              : 'rgba(250,250,250,0.8)',
-          }} />
-        </div>
-      )}
+      {/* ═══ Persistent Video Background ═══ */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay muted loop playsInline
+          className="w-full h-full object-cover"
+          src="/bg.mp4"
+        />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0" style={{
+          background: isDark
+            ? 'rgba(9,9,11,0.85)' // Slightly darker overlay to improve message readability over dynamic video background
+            : 'rgba(250,250,250,0.88)',
+        }} />
+      </div>
 
       {/* ═══ Aurora orbs (chat mode only) ═══ */}
       {!isWelcome && (
@@ -507,7 +506,11 @@ Please remember to respond in the user's preferred language/dialect, and use the
                 </div>
 
                 <p className="text-sm leading-relaxed mb-6 text-white/70">
-                  Aney machang! Welcome to your real-time Sri Lankan shopping companion. I can speak Sinhala/Singlish, Tamil/Tanglish, or English. Here are all the powerful features I have built in for you:
+                  {language === 'si'
+                    ? 'අනේ මචං! ඔයාගේ සජීවී ශ්‍රී ලාංකික සාප්පු සවාරි සහකරු වෙත සාදරයෙන් පිළිගනිමු. මට සිංහල/Singlish, දෙමළ/Tanglish, හෝ ඉංග්‍රීසි කතා කරන්න පුළුවන්. මෙන්න මම ඔබ වෙනුවෙන්ම සූදානම් කර ඇති සුවිශේෂී පහසුකම්:'
+                    : language === 'ta'
+                    ? 'அனே மச்சான்! உங்களது நிகழ்நேர இலங்கை ஷாப்பிங் துணணக்கு வரவேற்கிறோம். நான் சிங்களம்/சிங்கிலிஷ், தமிழ்/தமிழிலிஷ் அல்லது ஆங்கிலம் பேசக்கூடியவன். உங்களுக்காக நான் உருவாக்கிய சில அம்சங்கள் இதோ:'
+                    : 'Aney machang! Welcome to your real-time Sri Lankan shopping companion. I can speak Sinhala/Singlish, Tamil/Tanglish, or English. Here are all the powerful features I have built in for you:'}
                 </p>
 
                 {/* Features Grid */}
@@ -593,7 +596,7 @@ Please remember to respond in the user's preferred language/dialect, and use the
                     }}
                     className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-Kapruka-orange via-orange-500 to-amber-500 text-white font-black text-sm shadow-[0_8px_30px_rgba(255,107,43,0.35)] cursor-pointer tracking-wider"
                   >
-                    OK, Let's Shop!
+                    {language === 'si' ? 'හරි, සාප්පු සවාරි යමු!' : language === 'ta' ? 'சரி, வாங்கலாம்!' : "OK, Let's Shop!"}
                   </motion.button>
                 </div>
               </div>
