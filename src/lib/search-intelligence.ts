@@ -69,8 +69,10 @@ const EXTRACT_SYSTEM_PROMPT = `Extract a clean product search query from the use
 Rules:
 - Output 2-4 concrete product keywords only (e.g. "leather wallet men", not "something nice for dad")
 - Translate Sinhala/Tamil/Tanglish to English product terms (e.g. "ammata cake ekak" → "cake for mother")
+- NEVER include relationship/recipient words (mom, sister, amma, dad) in q — these describe who, not what
+- NEVER include location/city names (e.g. Colombo) in q — these are delivery info, ignore them entirely
+- If user says generic "gift" with no product type specified, set q to a broad category term like "gift hamper" rather than guessing a narrow product
 - If an occasion is implied (birthday, father's day, wedding), convert it to product categories — don't search the occasion word itself
-  Examples: "fathers day gift" → "wallet men perfume", "birthday amma" → "cake flowers chocolate"
 - Strip filler words: gift, nice, something, present, want, need, looking for, bro, machan
 - If a category is obvious, include it in the "category" field
 - Keep the query SHORT and product-focused

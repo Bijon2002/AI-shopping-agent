@@ -78,31 +78,47 @@ export const searchProducts = async (
   // Fail-open: if it errors, uses original q.
   const cleaned = await extractSearchQuery(q, _currentOccasion?.name ?? undefined);
 
-  // Always request 'json' format so we get structured products we can render in UI
-  const raw = await callMCPTool('kapruka_search_products', {
-    params: {
-      q: cleaned.q,
-      ...(cleaned.category && !opts?.category ? { category: cleaned.category } : {}),
-      ...opts,
-      response_format: 'json'
-    }
-  });
+  // Helper to fetch and map products
+  const fetchProducts = async (options: any) => {
+    const raw = await callMCPTool('kapruka_search_products', {
+      params: {
+        q: cleaned.q,
+        ...(cleaned.category && !options.category ? { category: cleaned.category } : {}),
+        ...options,
+        response_format: 'json'
+      }
+    });
+    
+    if (typeof raw === 'string') return [];
+    
+    return (raw?.results ?? []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price?.amount ?? 0,
+      in_stock: p.in_stock ?? false,
+      image_url: p.image_url ?? undefined,
+      category: p.category?.name ?? undefined,
+      description: p.summary ?? undefined,
+      rating: p.rating ?? undefined,
+    })) as KaprukProduct[];
+  };
 
-  // Map the raw results to our internal KaprukProduct format
-  if (typeof raw === 'string') {
-    return { error: raw, products: [] };
+  // Always request 'json' format so we get structured products we can render in UI
+  let products = await fetchProducts(opts || {});
+
+  // ═══ FIX #3: Price Filter Fallback ═══
+  // If price constraints caused 0-1 results, drop the constraints and try again.
+  if (products.length <= 1 && (opts?.max_price || opts?.min_price)) {
+    console.debug(`[MCP] Price filter caused near-empty results. Dropping price filters and retrying.`);
+    const fallbackOpts = { ...opts };
+    delete fallbackOpts.max_price;
+    delete fallbackOpts.min_price;
+    const fallbackProducts = await fetchProducts(fallbackOpts);
+    
+    if (fallbackProducts.length > products.length) {
+      products = fallbackProducts;
+    }
   }
-  
-  let products: KaprukProduct[] = (raw?.results ?? []).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    price: p.price?.amount ?? 0,
-    in_stock: p.in_stock ?? false,
-    image_url: p.image_url ?? undefined,
-    category: p.category?.name ?? undefined,
-    description: p.summary ?? undefined,
-    rating: p.rating ?? undefined,
-  }));
 
   // ═══ STEP 2: Post-search occasion filter ═══
   // Remove products that are obviously mismatched with the detected occasion.
