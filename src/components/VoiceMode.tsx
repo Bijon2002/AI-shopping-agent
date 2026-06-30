@@ -170,7 +170,7 @@ export default function VoiceMode({
     let result: any;
     try {
       if (name === 'kapruka_search_products') {
-        const data = await MCP.searchProducts(args.q, args);
+        const data = await MCP.smartSearch(args.q, args);
         result = data;
         if (data?.products?.length) {
           accumulatedProductsRef.current = data.products;

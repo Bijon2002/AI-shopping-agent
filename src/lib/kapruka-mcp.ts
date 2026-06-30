@@ -1,7 +1,7 @@
 import type { OrderPayload, KaprukProduct } from '../types';
-import { filterMismatchedProducts } from './occasion-engine';
+import { filterMismatchedProducts, occasionMap } from './occasion-engine';
 import type { OccasionInfo } from './occasion-engine';
-import { extractSearchQuery, rerankResults } from './search-intelligence';
+import { parseIntent, rerankResults } from './search-intelligence';
 
 // All MCP calls go through our Vite Node.js plugin (no CORS, session managed there)
 const API_BASE = '/api/mcp-call';
@@ -60,11 +60,28 @@ export function setCurrentOccasion(occasion: OccasionInfo | null) {
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
-// The Kapruka MCP server uses FastMCP. ALL functions are defined with a `params: Model` signature,
-// which means EVERY tool call must wrap its parameters inside a `{ params: { ... } }` object.
 
-export const searchProducts = async (
-  q: string,
+async function runSearch(q: string, opts: any): Promise<KaprukProduct[]> {
+  const raw = await callMCPTool('kapruka_search_products', {
+    params: { q, ...opts, response_format: 'json' }
+  });
+  
+  if (typeof raw === 'string') return [];
+  
+  return (raw?.results ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price?.amount ?? 0,
+    in_stock: p.in_stock ?? false,
+    image_url: p.image_url ?? undefined,
+    category: p.category?.name ?? undefined,
+    description: p.summary ?? undefined,
+    rating: p.rating ?? undefined,
+  })) as KaprukProduct[];
+}
+
+export const smartSearch = async (
+  rawQuery: string,
   opts?: {
     category?: string;
     min_price?: number;
@@ -73,69 +90,31 @@ export const searchProducts = async (
     limit?: number;
   }
 ) => {
-  // ═══ STEP 1: LLM Query Rewriting ═══
-  // Rewrites natural-language q into clean product keywords.
-  // Fail-open: if it errors, uses original q.
-  const cleaned = await extractSearchQuery(q, _currentOccasion?.name ?? undefined);
+  const intent = await parseIntent(rawQuery);
+  const detectedOccasion = intent.occasion ? occasionMap[intent.occasion.toLowerCase()] : undefined;
+  const occasionConfig = detectedOccasion || _currentOccasion;
+  const relaxed: string[] = [];
 
-  // Helper to fetch and map products
-  const fetchProducts = async (options: any) => {
-    const raw = await callMCPTool('kapruka_search_products', {
-      params: {
-        q: cleaned.q,
-        ...(cleaned.category && !options.category ? { category: cleaned.category } : {}),
-        ...options,
-        response_format: 'json'
-      }
-    });
-    
-    if (typeof raw === 'string') return [];
-    
-    return (raw?.results ?? []).map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      price: p.price?.amount ?? 0,
-      in_stock: p.in_stock ?? false,
-      image_url: p.image_url ?? undefined,
-      category: p.category?.name ?? undefined,
-      description: p.summary ?? undefined,
-      rating: p.rating ?? undefined,
-    })) as KaprukProduct[];
-  };
+  const attempts = [
+    () => runSearch(intent.product, { ...opts }),
+    () => { relaxed.push('price'); return runSearch(intent.product, { ...opts, max_price: undefined, min_price: undefined }); },
+    () => { relaxed.push('occasion-filter-skip'); return runSearch(intent.product, { ...opts, max_price: undefined, min_price: undefined }); },
+    () => { relaxed.push('broadened-category'); return runSearch(occasionConfig?.searchTerms?.[0] ?? 'gift', {}); },
+  ];
 
-  // Always request 'json' format so we get structured products we can render in UI
-  let products = await fetchProducts(opts || {});
-
-  // ═══ FIX #3: Price Filter Fallback ═══
-  // If price constraints caused 0-1 results, drop the constraints and try again.
-  if (products.length <= 1 && (opts?.max_price || opts?.min_price)) {
-    console.debug(`[MCP] Price filter caused near-empty results. Dropping price filters and retrying.`);
-    const fallbackOpts = { ...opts };
-    delete fallbackOpts.max_price;
-    delete fallbackOpts.min_price;
-    const fallbackProducts = await fetchProducts(fallbackOpts);
-    
-    if (fallbackProducts.length > products.length) {
-      products = fallbackProducts;
+  for (const attempt of attempts) {
+    let products = await attempt();
+    if (occasionConfig && relaxed[relaxed.length - 1] !== 'occasion-filter-skip') {
+      products = filterMismatchedProducts(products, occasionConfig);
+    }
+    if (products.length >= 3) {
+      return { products: await rerankResults(products, rawQuery), relaxed };
     }
   }
-
-  // ═══ STEP 2: Post-search occasion filter ═══
-  // Remove products that are obviously mismatched with the detected occasion.
-  const before = products.length;
-  products = filterMismatchedProducts(products, _currentOccasion);
-  if (products.length < before) {
-    console.debug(
-      `[MCP] Occasion filter removed ${before - products.length} mismatched product(s) for "${_currentOccasion?.name}"`
-    );
-  }
-
-  // ═══ STEP 3: LLM Re-ranking ═══
-  // Re-ranks results by relevance using LLM judgment.
-  // Fail-open: if it errors or returns empty, uses unfiltered list.
-  products = await rerankResults(products, q);
-
-  return { products };
+  
+  // Last attempt's result, however thin, beats showing nothing
+  const last = await attempts[attempts.length - 1]();
+  return { products: await rerankResults(last, rawQuery), relaxed };
 };
 
 export const getProduct = async (product_id: string) => {

@@ -13,8 +13,9 @@ import ProductDetailsModal from './ProductDetailsModal';
 import { useStore } from '../store';
 import { useTheme } from './ThemeProvider';
 import { sendMessage } from '../lib/openrouter';
-import { detectOccasion, getSystemContextNote, getSearchGuidance, OCCASIONS } from '../lib/occasion-engine';
+import { getOccasion, getSystemContextNote, getSearchGuidance } from '../lib/occasion-engine';
 import { setCurrentOccasion } from '../lib/kapruka-mcp';
+import { parseIntent } from '../lib/search-intelligence';
 import { toast } from 'react-hot-toast';
 import { translations } from '../lib/translations';
 
@@ -110,13 +111,14 @@ export default function ChatShell() {
     setIsLoading(true);
     setCurrentToolName(null);
 
-    // Detect occasion from this message, or carry over from earlier in conversation
-    let occasion = detectOccasion(text);
+    // Detect occasion from this message using parseIntent, or carry over from earlier
+    const intent = await parseIntent(text);
+    let occasion = intent.occasion ? getOccasion(intent.occasion) : null;
     if (occasion) {
       setDetectedOccasion(occasion.name);
     } else if (detectedOccasion) {
       // Carry over the previously detected occasion (e.g. user said "amma" earlier)
-      occasion = OCCASIONS.find(o => o.name === detectedOccasion) ?? null;
+      occasion = getOccasion(detectedOccasion) ?? null;
     }
 
     // ═══ FIX #2+3: Set the active occasion on the MCP module for post-search filtering

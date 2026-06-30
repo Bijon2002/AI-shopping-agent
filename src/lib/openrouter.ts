@@ -204,8 +204,19 @@ DATE VALIDATION RULES (apply these strictly):
 
         try {
           if (name === 'kapruka_search_products') {
-            result = await MCP.searchProducts(args.q, args);
+            result = await MCP.smartSearch(args.q, args);
             if (result?.products) onProducts(result.products);
+            // Include relaxed array in tool response so LLM knows what constraints were dropped
+            toolResults.push({
+              tool_call_id: toolCall.id,
+              role: 'tool',
+              name,
+              content: JSON.stringify({ 
+                results: result.products.map((p: any) => ({ name: p.name, price: p.price, id: p.id })),
+                relaxed: result.relaxed || []
+              }),
+            });
+            continue; // Skip the default tool result push below
           } else if (name === 'kapruka_check_delivery') {
             result = await MCP.checkDelivery(args.city, args.delivery_date, args.product_id);
           } else if (name === 'kapruka_list_delivery_cities') {

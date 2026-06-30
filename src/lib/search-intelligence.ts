@@ -8,10 +8,8 @@
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const INTEL_MODEL = 'openai/gpt-4o-mini'; // pinned, no fallback array
 
-interface SearchQuery {
-  q: string;
-  category?: string;
-}
+// Simple in-memory cache to save LLM round-trips for identical searches
+const queryCache = new Map<string, ParsedIntent>();
 
 /**
  * Non-streaming OpenRouter call for internal intelligence steps.
@@ -64,65 +62,66 @@ async function callIntelLLM(
 
 // ── Step 1: Query Rewriting ──────────────────────────────────────────────────
 
-const EXTRACT_SYSTEM_PROMPT = `Extract a clean product search query from the user's shopping request.
+export interface ParsedIntent {
+  product: string;
+  recipient?: string;
+  location?: string;
+  occasion?: string;
+  max_price?: number;
+  min_price?: number;
+}
 
-Rules:
-- Output 2-4 concrete product keywords only (e.g. "leather wallet men", not "something nice for dad")
-- Translate Sinhala/Tamil/Tanglish to English product terms (e.g. "ammata cake ekak" → "cake for mother")
-- NEVER include relationship/recipient words (mom, sister, amma, dad) in q — these describe who, not what
-- NEVER include location/city names (e.g. Colombo) in q — these are delivery info, ignore them entirely
-- If user says generic "gift" with no product type specified, set q to a broad category term like "gift hamper" rather than guessing a narrow product
-- If an occasion is implied (birthday, father's day, wedding), convert it to product categories — don't search the occasion word itself
-- Strip filler words: gift, nice, something, present, want, need, looking for, bro, machan
-- If a category is obvious, include it in the "category" field
-- Keep the query SHORT and product-focused
+const PARSE_INTENT_SYSTEM_PROMPT = `Decompose the user's request into separate fields. Do not blend them.
+- product: concrete item/category to search for (translate Sinhala/Tamil to English). If unclear, infer from occasion (e.g. birthday → "cake", anniversary → "flowers"). If still unclear, use "gift".
+- recipient: who it's for (mom, sister, girlfriend, etc) — for context only, NEVER include in product
+- location: any city/delivery location mentioned — for context only, NEVER include in product
+- occasion: birthday, anniversary, wedding, etc — must be the SPECIFIC word used by the user, do not generalize anniversary→wedding or similar
+- max_price / min_price: if a budget is mentioned
 
-Respond ONLY as JSON: {"q": "search keywords", "category": "optional category"}`;
+Respond ONLY as JSON matching this schema:
+{
+  "product": "string",
+  "recipient": "string",
+  "location": "string",
+  "occasion": "string",
+  "max_price": 100,
+  "min_price": 10
+}`;
 
-// Simple in-memory cache to save LLM round-trips for identical searches
-const queryCache = new Map<string, SearchQuery>();
-
-/**
- * Rewrites a raw/natural-language query into clean product keywords.
- * Fail-open: returns original q on any error.
- */
-export async function extractSearchQuery(
-  rawQuery: string,
-  occasion?: string,
-): Promise<SearchQuery> {
-  const cacheKey = `${occasion || 'none'}:${rawQuery.toLowerCase()}`;
+export async function parseIntent(rawQuery: string): Promise<ParsedIntent> {
+  const cacheKey = `intent:${rawQuery.toLowerCase()}`;
   if (queryCache.has(cacheKey)) {
-    console.debug(`[SearchIntel] Cache hit for "${rawQuery}"`);
-    return queryCache.get(cacheKey)!;
+    console.debug(`[SearchIntel] Cache hit for parseIntent: "${rawQuery}"`);
+    return queryCache.get(cacheKey) as any;
   }
 
   try {
-    const userMsg = occasion
-      ? `Query: "${rawQuery}"\nDetected occasion: ${occasion}`
-      : `Query: "${rawQuery}"`;
-
-    const content = await callIntelLLM(EXTRACT_SYSTEM_PROMPT, userMsg, 60);
+    const userMsg = `Query: "${rawQuery}"`;
+    const content = await callIntelLLM(PARSE_INTENT_SYSTEM_PROMPT, userMsg, 120);
     const parsed = JSON.parse(content);
 
-    if (!parsed.q || typeof parsed.q !== 'string' || parsed.q.trim().length === 0) {
-      console.warn('[SearchIntel] extractSearchQuery returned empty q, using original');
-      return { q: rawQuery };
+    if (!parsed.product || typeof parsed.product !== 'string' || parsed.product.trim().length === 0) {
+      console.warn('[SearchIntel] parseIntent returned empty product, using original q');
+      parsed.product = rawQuery;
     }
 
-    const result = {
-      q: parsed.q.trim(),
-      category: parsed.category?.trim() || undefined,
+    const result: ParsedIntent = {
+      product: parsed.product.trim(),
+      recipient: parsed.recipient?.trim() || undefined,
+      location: parsed.location?.trim() || undefined,
+      occasion: parsed.occasion?.trim() || undefined,
+      max_price: parsed.max_price || undefined,
+      min_price: parsed.min_price || undefined,
     };
     
-    // Cache the successful result (limit cache size to prevent memory leaks)
     if (queryCache.size > 1000) queryCache.clear(); 
-    queryCache.set(cacheKey, result);
+    queryCache.set(cacheKey, result as any);
 
-    console.debug(`[SearchIntel] Query rewrite: "${rawQuery}" → "${result.q}"${result.category ? ` [cat: ${result.category}]` : ''}`);
+    console.debug(`[SearchIntel] Parsed intent:`, result);
     return result;
   } catch (e: any) {
-    console.warn('[SearchIntel] extractSearchQuery failed, using original q:', e.message);
-    return { q: rawQuery };
+    console.warn('[SearchIntel] parseIntent failed, using original q:', e.message);
+    return { product: rawQuery };
   }
 }
 
