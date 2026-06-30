@@ -107,7 +107,7 @@ export const smartSearch = async (
     if (occasionConfig && relaxed[relaxed.length - 1] !== 'occasion-filter-skip') {
       products = filterMismatchedProducts(products, occasionConfig);
     }
-    if (products.length >= 3) {
+    if (products.length > 0) {
       return { products: await rerankResults(products, rawQuery), relaxed };
     }
   }
