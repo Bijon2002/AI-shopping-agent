@@ -305,7 +305,12 @@ export default function VoiceMode({
     cleanUp();
 
     const key = import.meta.env.VITE_GEMINI_API_KEY || '';
-    console.log(`[VoiceMode] Connecting using API Key starting with: "${key.substring(0, 6)}...", total length: ${key.length}`);
+    if (!key) {
+      setStatus('Disconnected');
+      setDisconnectReason('Gemini API Key not configured. Set VITE_GEMINI_API_KEY in environment.');
+      isConnectingRef.current = false;
+      return;
+    }
     const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${key}`;
     
     if (!isMountedRef.current) {

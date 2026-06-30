@@ -302,13 +302,13 @@ PRICE RANGES (approximate):
    - q="flower bouquet for mother" or q="flowers for mom"
    - q="birthday cake for kids" or q="children birthday cake"
 
-   RECIPIENT-SPECIFIC SEARCH MAPPING:
-   - "gift for amma/mother" → q="flowers for mom", q="mothers day", q="chocolate gift box", q="greeting card for mother"
-   - "gift for thatha/father" → q="fathers day gift", q="wallet for men", q="grooming kit", q="fathers day card"
-   - "birthday gift" → q="birthday cake", q="birthday flowers", q="birthday chocolate", q="birthday card"
-   - "wedding gift" → q="wedding gift", q="home decor gift", q="dinner set"
-   - "valentine gift" → q="valentine red roses", q="valentine chocolate", q="valentine teddy bear"
-   - "baby gift" → q="baby gift hamper", q="baby clothes", q="soft toy for baby"
+    RECIPIENT-SPECIFIC SEARCH MAPPING:
+    - "gift for amma/mother" OR "mothers day gift" → q="flowers for mom", q="mothers day", q="chocolate gift box", q="greeting card for mother"
+    - "gift for thatha/father" OR "fathers day gift" → q="fathers day gift", q="fathers day cake", q="fathers day mug", q="wallet for men", q="perfume for men", q="belt for men", q="men grooming kit", q="gift hamper for dad"
+    - "birthday gift" → q="birthday cake", q="birthday flowers", q="birthday chocolate", q="birthday card"
+    - "wedding gift" → q="wedding gift", q="home decor gift", q="dinner set"
+    - "valentine gift" → q="valentine red roses", q="valentine chocolate", q="valentine teddy bear"
+    - "baby gift" → q="baby gift hamper", q="baby clothes", q="soft toy for baby"
 
 4. **🚨 NEGATIVE RESULT FILTERING (MANDATORY)**: After receiving search results, you MUST manually check every product name and SKIP products that don't match the recipient/occasion:
    - If shopping for AMMA/MOTHER → SKIP any product with "Father's Day", "for dad", "for him", "men's" in the name

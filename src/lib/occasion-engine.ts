@@ -48,13 +48,14 @@ export const OCCASIONS: OccasionInfo[] = [
   {
     name: 'Thatha (Father)',
     emoji: '👔',
-    recommendations: 'Suggest wallets, belts, grooming kits, or non-perishable hampers.',
-    keywords: ['father', 'dad', 'thatha', 'tatta', 'appachchi', 'daddy'],
+    recommendations: 'Suggest wallets, belts, grooming kits, mugs, cakes, or non-perishable hampers.',
+    keywords: ['father', 'dad', 'thatha', 'tatta', 'appachchi', 'daddy', "fathers day", "father's day", "fathers day gift", "dad's day"],
     negativeKeywords: [
       "mother's day", 'mothers day', "mother`s day", 'for mom', 'for mother', 'for amma',
       'for her', 'women gift', 'women\'s', 'womens ', 'saree', 'handbag',
+      'bridal', 'baby shower', 'baby girl', 'kitchen set',
     ],
-    searchTerms: ['fathers day', 'gift for father', 'wallet', 'belt', 'men gift'],
+    searchTerms: ['fathers day gift', 'fathers day cake', 'fathers day mug', 'wallet for men', 'belt for men', 'perfume for men', 'men grooming', 'gift hamper for dad'],
   },
   {
     name: 'Vesak',
