@@ -77,6 +77,9 @@ Rules:
 
 Respond ONLY as JSON: {"q": "search keywords", "category": "optional category"}`;
 
+// Simple in-memory cache to save LLM round-trips for identical searches
+const queryCache = new Map<string, SearchQuery>();
+
 /**
  * Rewrites a raw/natural-language query into clean product keywords.
  * Fail-open: returns original q on any error.
@@ -85,6 +88,12 @@ export async function extractSearchQuery(
   rawQuery: string,
   occasion?: string,
 ): Promise<SearchQuery> {
+  const cacheKey = `${occasion || 'none'}:${rawQuery.toLowerCase()}`;
+  if (queryCache.has(cacheKey)) {
+    console.debug(`[SearchIntel] Cache hit for "${rawQuery}"`);
+    return queryCache.get(cacheKey)!;
+  }
+
   try {
     const userMsg = occasion
       ? `Query: "${rawQuery}"\nDetected occasion: ${occasion}`
@@ -98,11 +107,17 @@ export async function extractSearchQuery(
       return { q: rawQuery };
     }
 
-    console.debug(`[SearchIntel] Query rewrite: "${rawQuery}" → "${parsed.q}"${parsed.category ? ` [cat: ${parsed.category}]` : ''}`);
-    return {
+    const result = {
       q: parsed.q.trim(),
       category: parsed.category?.trim() || undefined,
     };
+    
+    // Cache the successful result (limit cache size to prevent memory leaks)
+    if (queryCache.size > 1000) queryCache.clear(); 
+    queryCache.set(cacheKey, result);
+
+    console.debug(`[SearchIntel] Query rewrite: "${rawQuery}" → "${result.q}"${result.category ? ` [cat: ${result.category}]` : ''}`);
+    return result;
   } catch (e: any) {
     console.warn('[SearchIntel] extractSearchQuery failed, using original q:', e.message);
     return { q: rawQuery };
