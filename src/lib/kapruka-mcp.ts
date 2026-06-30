@@ -1,6 +1,7 @@
 import type { OrderPayload, KaprukProduct } from '../types';
 import { filterMismatchedProducts } from './occasion-engine';
 import type { OccasionInfo } from './occasion-engine';
+import { extractSearchQuery, rerankResults } from './search-intelligence';
 
 // All MCP calls go through our Vite Node.js plugin (no CORS, session managed there)
 const API_BASE = '/api/mcp-call';
@@ -72,10 +73,16 @@ export const searchProducts = async (
     limit?: number;
   }
 ) => {
+  // ═══ STEP 1: LLM Query Rewriting ═══
+  // Rewrites natural-language q into clean product keywords.
+  // Fail-open: if it errors, uses original q.
+  const cleaned = await extractSearchQuery(q, _currentOccasion?.name ?? undefined);
+
   // Always request 'json' format so we get structured products we can render in UI
   const raw = await callMCPTool('kapruka_search_products', {
     params: {
-      q,
+      q: cleaned.q,
+      ...(cleaned.category && !opts?.category ? { category: cleaned.category } : {}),
       ...opts,
       response_format: 'json'
     }
@@ -97,9 +104,8 @@ export const searchProducts = async (
     rating: p.rating ?? undefined,
   }));
 
-  // ═══ FIX #2: Post-search occasion filter ═══
+  // ═══ STEP 2: Post-search occasion filter ═══
   // Remove products that are obviously mismatched with the detected occasion.
-  // e.g. "Father's Day" cards when the user is shopping for Amma.
   const before = products.length;
   products = filterMismatchedProducts(products, _currentOccasion);
   if (products.length < before) {
@@ -107,6 +113,11 @@ export const searchProducts = async (
       `[MCP] Occasion filter removed ${before - products.length} mismatched product(s) for "${_currentOccasion?.name}"`
     );
   }
+
+  // ═══ STEP 3: LLM Re-ranking ═══
+  // Re-ranks results by relevance using LLM judgment.
+  // Fail-open: if it errors or returns empty, uses unfiltered list.
+  products = await rerankResults(products, q);
 
   return { products };
 };
