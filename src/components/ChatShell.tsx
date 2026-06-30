@@ -184,6 +184,7 @@ Please remember to respond in the user's preferred language/dialect, and use the
     }
 
     let acc = '';
+    let accProducts: any[] = [];
     try {
       await sendMessage(
         historyPayload,
@@ -194,13 +195,17 @@ Please remember to respond in the user's preferred language/dialect, and use the
           } else {
             acc += chunk;
           }
-          updateLastAssistant(acc);
+          updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined);
         },
-        (products) => { updateLastAssistant(acc, products); },
-        (payUrl) => { updateLastAssistant(acc, undefined, payUrl); },
-        (orderNo) => { updateLastAssistant(acc, undefined, undefined, orderNo); },
-        (trackingData) => { updateLastAssistant(acc, undefined, undefined, undefined, trackingData); },
-        (invoiceData) => { updateLastAssistant(acc, undefined, undefined, undefined, undefined, invoiceData); },
+        (products) => { 
+          const newProducts = products.filter((p: any) => !accProducts.some(ap => ap.id === p.id));
+          accProducts = [...accProducts, ...newProducts];
+          updateLastAssistant(acc, accProducts); 
+        },
+        (payUrl) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, payUrl); },
+        (orderNo) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, undefined, orderNo); },
+        (trackingData) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, undefined, undefined, trackingData); },
+        (invoiceData) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, undefined, undefined, undefined, invoiceData); },
         (toolName) => { setCurrentToolName(toolName); },
         () => { setCurrentToolName(null); },
         (action, payload) => {
