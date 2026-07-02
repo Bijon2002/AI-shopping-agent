@@ -189,7 +189,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
         )}
 
         {/* Products */}
-        {msg.products && msg.products.length > 0 && <ProductCarousel products={msg.products} onSend={onSend} />}
+        {msg.products && msg.products.length > 0 && <ProductCarousel products={msg.products} />}
       </div>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, MicOff, ImagePlus, X, ShoppingCart } from 'lucide-react';
+import { Send, Mic, MicOff, ImagePlus, X } from 'lucide-react';
 
 import { useStore } from '../store';
 import { Headphones } from 'lucide-react';

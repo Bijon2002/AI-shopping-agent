@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Sparkles, User, Sun, Moon } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Sparkles, User } from 'lucide-react';
 import MessageList from './MessageList';
 import VoiceMode from './VoiceMode';
 import ChatInput from './ChatInput';
@@ -36,10 +36,10 @@ export default function ChatShell() {
 
   const t = translations[language] || translations.en;
 
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolName, setCurrentToolName] = useState<string | null>(null);
-  const [voiceOutput, setVoiceOutput] = useState(false);
+  const [voiceOutput] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGlobalDragging, setIsGlobalDragging] = useState(false);
 

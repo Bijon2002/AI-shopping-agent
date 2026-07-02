@@ -5,7 +5,7 @@ import { useStore } from '../store';
 import type { KaprukProduct } from '../types';
 import { translations } from '../lib/translations';
 
-export default function ProductCard({ product, onSend }: { product: KaprukProduct, onSend?: (t: string) => void }) {
+export default function ProductCard({ product }: { product: KaprukProduct }) {
   const addToCart = useStore((s) => s.addToCart);
   const toggleWishlist = useStore((s) => s.toggleWishlist);
   const isWishlisted = useStore((s) => s.isWishlisted);
