@@ -184,15 +184,6 @@ export default function ChatInput({
         <ImagePlus size={16} />
       </motion.button>
 
-      {/* Checkout Cart */}
-      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => onSend('checkout cart')}
-        disabled={disableCheckout}
-        title="Checkout Cart"
-        className={`flex-none px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50 ${cart.length === 0 ? 'opacity-30' : ''}`}
-        style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }}>
-        Cart Checkout
-      </motion.button>
-
       {/* Input & Image Preview Wrapper */}
       <div className={`flex-1 flex flex-col relative rounded-lg sm:rounded-xl transition-all duration-300 ${isFocused ? 'input-glow' : ''}`}>
 
@@ -230,6 +221,15 @@ export default function ChatInput({
           }}
         />
       </div>
+
+      {/* Checkout Cart */}
+      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => onSend('checkout cart')}
+        disabled={disableCheckout}
+        title="Checkout Cart"
+        className={`flex-none px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50 ${cart.length === 0 ? 'opacity-30' : ''}`}
+        style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }}>
+        Checkout
+      </motion.button>
 
       {/* Send */}
       <motion.button type="submit" whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}

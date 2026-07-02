@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import MessageBubble from './MessageBubble';
 import { useStore } from '../store';
 import { Sparkles, Calendar, Gift, Heart, Package, Trash2 } from 'lucide-react';
@@ -30,6 +30,15 @@ export default function MessageList({
 }) {
   const { messages, clearMessages, language } = useStore();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [greetingIndex, setGreetingIndex] = useState(0);
+  const greetings = ['Welcome!', 'வணக்கம்!', 'ආයුබෝවන්!'];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreetingIndex((prev) => (prev + 1) % greetings.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -77,10 +86,20 @@ export default function MessageList({
 
           {/* Title */}
           <div className="space-y-1.5 sm:space-y-2">
-            <h2 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight leading-tight animate-pulse-soft drop-shadow-md"
-                style={{ color: '#fad804' }}>
-              {language === 'si' ? 'ආයුබෝවන්!' : language === 'ta' ? 'வணக்கம்!' : 'Ayubowan!'}
-            </h2>
+            <div className="h-[32px] sm:h-[40px] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.h2
+                  key={greetingIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight leading-tight drop-shadow-md"
+                  style={{ color: '#fad804' }}>
+                  {greetings[greetingIndex]}
+                </motion.h2>
+              </AnimatePresence>
+            </div>
             <div
               className="py-2 px-4 mx-auto transition-colors duration-500"
               style={{ maxWidth: 'fit-content' }}
