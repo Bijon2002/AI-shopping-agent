@@ -163,7 +163,12 @@ DATE VALIDATION RULES (apply these strictly):
             const delta = choice0.delta;
             if (delta?.content) {
               streamedContent += delta.content;
-              onChunk(delta.content); // ⚡ Instant word-by-word display
+              
+              // Hide <think> tags (both closed and unclosed) from the UI
+              let displayContent = streamedContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+              displayContent = displayContent.replace(/<think>[\s\S]*$/gi, '').trim();
+              
+              onChunk('\x00REPLACE\x00' + displayContent);
             }
             if (delta?.tool_calls) {
               for (const tc of delta.tool_calls) {
@@ -222,15 +227,39 @@ DATE VALIDATION RULES (apply these strictly):
           } else if (name === 'kapruka_list_delivery_cities') {
             result = await MCP.listDeliveryCities(args.query);
           } else if (name === 'kapruka_create_order') {
-            result = await MCP.createOrder(args);
-            if (result?.pay_url) onPayLink(result.pay_url);
-            if (result?.order_number) onOrderConfirm(result.order_number);
+            const missing = [];
+            if (!args.recipient?.name) missing.push('recipient name');
+            if (!args.recipient?.phone) missing.push('recipient phone');
+            if (!args.delivery?.city) missing.push('delivery city');
+            if (!args.delivery?.address) missing.push('delivery address');
+            if (!args.delivery?.date) missing.push('delivery date');
+            if (!args.sender?.name) missing.push('sender name');
+
+            if (missing.length > 0) {
+              result = { error: `Validation failed: Missing ${missing.join(', ')}. You MUST ask the user for these missing details before placing the order.` };
+            } else {
+              result = await MCP.createOrder(args);
+              if (result?.pay_url) onPayLink(result.pay_url);
+              if (result?.order_number) onOrderConfirm(result.order_number);
+            }
           } else if (name === 'kapruka_track_order') {
             result = await MCP.trackOrder(args.order_number);
             if (result && !result.error) onTracking(result);
           } else if (name === 'kapruka_preview_checkout') {
-            result = { success: true, message: 'Invoice displayed.' };
-            onInvoice(args);
+            const missing = [];
+            if (!args.recipient?.name) missing.push('recipient name');
+            if (!args.recipient?.phone) missing.push('recipient phone');
+            if (!args.delivery?.city) missing.push('delivery city');
+            if (!args.delivery?.address) missing.push('delivery address');
+            if (!args.delivery?.date) missing.push('delivery date');
+            if (!args.sender?.name) missing.push('sender name');
+
+            if (missing.length > 0) {
+              result = { error: `Validation failed: Missing ${missing.join(', ')}. You MUST ask the user for these missing details before showing the invoice.` };
+            } else {
+              result = { success: true, message: 'Invoice displayed.' };
+              onInvoice(args);
+            }
           } else if (name === 'kapruka_global_extension') {
             const price = Math.floor(Math.random() * 50000) + 15000;
             result = { success: true, estimated_price_lkr: price, message: `Estimated landed cost: LKR ${price}` };

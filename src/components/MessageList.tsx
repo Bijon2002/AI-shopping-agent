@@ -14,9 +14,9 @@ interface QuickChip {
 }
 
 const QUICK_STARTS: QuickChip[] = [
-  { label: 'Birthday Gift', prompt: 'I want to send a birthday gift to Colombo', icon: Gift, color: '#FF6B7D', glow: 'rgba(255,107,125,0.15)' },
+  { label: 'Chocolate Cake', prompt: 'Find me a rich chocolate cake', icon: Gift, color: '#FF6B7D', glow: 'rgba(255,107,125,0.15)' },
   { label: 'Anniversary Flowers', prompt: 'Show me anniversary flower arrangements', icon: Sparkles, color: '#F5C518', glow: 'rgba(245,197,24,0.15)' },
-  { label: 'Chocolate Cake', prompt: 'Find me a rich chocolate cake', icon: Calendar, color: '#10B981', glow: 'rgba(16,185,129,0.15)' },
+  { label: 'Perfumes', prompt: 'Suggest a branded perfume', icon: Calendar, color: '#10B981', glow: 'rgba(16,185,129,0.15)' },
   { label: 'Gift for Amma', prompt: 'Suggest a gift for my Amma under 3000 LKR', icon: Heart, color: '#A855F7', glow: 'rgba(168,85,247,0.15)' },
   { label: 'Track Order', prompt: 'Track my order VPAY827982BA', icon: Package, color: '#3B82F6', glow: 'rgba(59,130,246,0.15)' },
 ];
