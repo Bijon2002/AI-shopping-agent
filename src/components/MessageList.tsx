@@ -15,10 +15,10 @@ interface QuickChip {
 
 const QUICK_STARTS: QuickChip[] = [
   { label: 'Birthday Gift', prompt: 'I want to send a birthday gift to Colombo', icon: Gift, color: '#FF6B7D', glow: 'rgba(255,107,125,0.15)' },
-  { label: 'Vesak Lanterns', prompt: 'Show me Vesak flowers or lanterns', icon: Sparkles, color: '#F5C518', glow: 'rgba(245,197,24,0.15)' },
-  { label: 'Avurudu Hamper', prompt: 'Find me an Avurudu sweet hamper', icon: Calendar, color: '#10B981', glow: 'rgba(16,185,129,0.15)' },
+  { label: 'Anniversary Flowers', prompt: 'Show me anniversary flower arrangements', icon: Sparkles, color: '#F5C518', glow: 'rgba(245,197,24,0.15)' },
+  { label: 'Chocolate Cake', prompt: 'Find me a rich chocolate cake', icon: Calendar, color: '#10B981', glow: 'rgba(16,185,129,0.15)' },
   { label: 'Gift for Amma', prompt: 'Suggest a gift for my Amma under 3000 LKR', icon: Heart, color: '#A855F7', glow: 'rgba(168,85,247,0.15)' },
-  { label: 'Track Order', prompt: 'Track my order #12345', icon: Package, color: '#3B82F6', glow: 'rgba(59,130,246,0.15)' },
+  { label: 'Track Order', prompt: 'Track my order VPAY827982BA', icon: Package, color: '#3B82F6', glow: 'rgba(59,130,246,0.15)' },
 ];
 
 export default function MessageList({
@@ -77,15 +77,18 @@ export default function MessageList({
 
           {/* Title */}
           <div className="space-y-1.5 sm:space-y-2">
-            <h2 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight gradient-text leading-tight animate-pulse-soft">
+            <h2 className="font-display font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight leading-tight animate-pulse-soft drop-shadow-md"
+                style={{ color: '#fad804' }}>
               {language === 'si' ? 'ආයුබෝවන්!' : language === 'ta' ? 'வணக்கம்!' : 'Ayubowan!'}
             </h2>
-            <h3 className="font-display font-bold text-xs sm:text-sm leading-snug text-white max-w-xs sm:max-w-sm mx-auto px-4">
-              {translations[language]?.welcomeTitle || translations.en.welcomeTitle}
-            </h3>
-            <p className="text-[10px] sm:text-xs leading-relaxed max-w-xs sm:max-w-sm mx-auto px-4" style={{ color: 'var(--text-muted)' }}>
-              {translations[language]?.welcomeSub || translations.en.welcomeSub}
-            </p>
+            <div
+              className="py-2 px-4 mx-auto transition-colors duration-500"
+              style={{ maxWidth: 'fit-content' }}
+            >
+              <h3 className="font-display font-bold text-xs sm:text-sm leading-snug text-white">
+                {translations[language]?.welcomeTitle || translations.en.welcomeTitle}
+              </h3>
+            </div>
           </div>
 
           {/* Active Voice/System connection status cards */}
@@ -93,9 +96,14 @@ export default function MessageList({
 
           {/* Quick Start Chips */}
           <div className="w-full space-y-1.5 sm:space-y-2">
-            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: 'var(--text-muted)' }}>
-              ✨ Quick Start
-            </p>
+            <div
+              className="inline-block px-3 py-1 rounded-lg backdrop-blur-md shadow-sm transition-colors duration-500"
+              style={{ background: 'rgba(150, 150, 150, 0.2)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--border-default)' }}
+            >
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-bold" style={{ color: 'var(--text-primary)' }}>
+                ✨ Quick Start
+              </p>
+            </div>
             <div className="flex flex-wrap gap-1.5 sm:gap-2.5 justify-center px-2">
               {QUICK_STARTS.map((chip, idx) => {
                 const Icon = chip.icon;
@@ -105,11 +113,11 @@ export default function MessageList({
                     whileHover={{ scale: 1.08, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onSend(chip.prompt)}
-                    className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all duration-300 shadow-md theme-t"
+                    className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all duration-300 shadow-md"
                     style={{
-                      background: chip.glow,
-                      border: `1px solid ${chip.color}30`,
-                      color: 'var(--text-primary)',
+                      background: 'rgba(24,24,27,0.85)',
+                      border: `1px solid ${chip.color}40`,
+                      color: '#ffffff',
                     }}
                   >
                     <Icon size={12} style={{ color: chip.color }} />
@@ -120,10 +128,6 @@ export default function MessageList({
             </div>
           </div>
 
-          {/* Footer */}
-          <p className="text-[8px] sm:text-[9px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-            Powered by Kapruka • Made with ❤️ in Sri Lanka
-          </p>
         </div>
       ) : (
         /* ═══ MESSAGES ═══ */
@@ -145,22 +149,22 @@ export default function MessageList({
           {isLoading && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2 sm:gap-3 mb-6">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-none animate-glow overflow-hidden"
-                style={{ border: '1px solid rgba(255,107,43,0.25)' }}>
+                style={{ border: '1px solid rgba(255,255,255,0.25)' }}>
                 <img src="/kado-logo.png" alt="Kapruka" className="w-full h-full object-cover" />
               </div>
-              <div className="rounded-2xl rounded-tl-sm px-4 sm:px-5 py-3 sm:py-4 max-w-[75%] sm:max-w-[70%] theme-t"
-                style={{ background: 'var(--bubble-assistant-bg)', border: '1px solid var(--bubble-assistant-border)' }}>
+              <div className="rounded-2xl rounded-tl-sm px-4 sm:px-5 py-3 sm:py-4 max-w-[75%] sm:max-w-[70%] theme-t shadow-lg"
+                style={{ background: '#422a74', border: 'none', boxShadow: '0 8px 25px rgba(66,42,116,0.35)' }}>
                 <div className="flex gap-1.5 items-center h-5">
                   {[0, 1, 2].map(i => (
                     <motion.span key={i}
                       animate={{ y: [0, -6, 0] }}
                       transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: 'easeInOut' }}
-                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-Kapruka-orange" />
+                      className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-white" />
                   ))}
                 </div>
                 {currentToolName && (
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-[9px] sm:text-[10px] text-Kapruka-orange font-bold uppercase tracking-wider block mt-2">
+                    className="text-[9px] sm:text-[10px] text-white font-bold uppercase tracking-wider block mt-2">
                     ⚡ {currentToolName.replace('kapruka_', '').replaceAll('_', ' ')}…
                   </motion.span>
                 )}

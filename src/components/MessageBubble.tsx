@@ -8,7 +8,9 @@ import type { Message } from '../types';
 /** Simple markdown renderer */
 function renderMarkdown(text: string) {
   if (!text) return null;
-  const lines = text.split('\n');
+  // Fix links broken across newlines
+  const processedText = text.replace(/\]\s*\n\s*\(/g, '](');
+  const lines = processedText.split('\n');
   const elements: ReactNode[] = [];
   let listBuffer: string[] = [];
   let listType: 'ul' | 'ol' | null = null;
@@ -56,7 +58,7 @@ function inlineMarkdown(text: string): (string | ReactNode)[] {
       if (match[7].startsWith('!')) {
         parts.push(<img key={`img-${match.index}`} src={match[9]} alt={match[8]} className="max-w-full rounded mt-1 shadow-sm border" style={{ borderColor: 'var(--border-default)' }} />);
       } else {
-        parts.push(<a key={`link-${match.index}`} href={match[9]} target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange underline underline-offset-2">{match[8]}</a>);
+        parts.push(<a key={`link-${match.index}`} href={match[9]} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" style={{ color: '#8B0000', fontWeight: 'bold', pointerEvents: 'auto', position: 'relative', zIndex: 50 }}>{match[8]}</a>);
       }
     }
     lastIndex = regex.lastIndex;
@@ -78,7 +80,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
       {/* Avatar */}
       {!isUser && (
         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-none shadow-lg relative overflow-hidden"
-          style={{ border: '1px solid rgba(255,107,43,0.3)' }}>
+          style={{ border: '1px solid rgba(66,42,116,0.3)' }}>
           <img src="/kado-logo.png" alt="K" className="w-full h-full object-cover" />
           <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-kado-emerald rounded-full border-2" style={{ borderColor: 'var(--bg-base)' }} />
         </div>
@@ -88,16 +90,16 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
         {/* Bubble */}
         <div className={`rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 shadow-lg theme-t ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
           style={isUser
-            ? { background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)', color: '#fff', boxShadow: '0 8px 25px rgba(255,107,43,0.25)' }
-            : { background: 'var(--bubble-assistant-bg)', border: '1px solid var(--bubble-assistant-border)', color: 'var(--text-primary)', backdropFilter: 'blur(12px)' }
+            ? { background: '#ffffff', color: '#1a1a1a', boxShadow: '0 8px 25px rgba(255,255,255,0.15)' }
+            : { background: '#422a74', border: 'none', color: '#ffffff', boxShadow: '0 8px 25px rgba(66,42,116,0.35)' }
           }>
           {isUser ? (
             <>
               {msg.image && (
-                <img src={msg.image} alt="User Upload" className="w-full max-w-[200px] sm:max-w-[250px] rounded-lg mb-2 shadow-sm border object-cover" style={{ borderColor: 'rgba(255,255,255,0.2)', maxHeight: '250px' }} />
+                <img src={msg.image} alt="User Upload" className="w-full max-w-[200px] sm:max-w-[250px] rounded-lg mb-2 shadow-sm border object-cover" style={{ borderColor: 'rgba(0,0,0,0.1)', maxHeight: '250px' }} />
               )}
               {msg.text && (
-                <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-all">{msg.text}</p>
+                <p className="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-all font-medium">{msg.text}</p>
               )}
             </>
           ) : (
@@ -139,7 +141,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
               <span className="text-[8px] sm:text-[9px] block uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Reference</span>
               <span className="font-display font-bold text-base sm:text-lg gradient-text">#{msg.orderNumber}</span>
             </div>
-            <button 
+            <button
               onClick={() => onSend && onSend(`Track order #${msg.orderNumber}`)}
               className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', border: '1px solid rgba(16,185,129,0.2)' }}
@@ -158,7 +160,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
               <Receipt size={16} />
               <span className="font-display font-bold text-sm">Invoice Preview</span>
             </div>
-            
+
             <div className="space-y-2 border-b pb-3 mb-3" style={{ borderColor: 'var(--border-default)' }}>
               {msg.invoiceData.items?.map((item: any, idx: number) => (
                 <div key={idx} className="flex justify-between text-xs sm:text-sm">
@@ -167,7 +169,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
                 </div>
               ))}
             </div>
-            
+
             <div className="space-y-1 text-xs sm:text-sm">
               <div className="flex justify-between">
                 <span style={{ color: 'var(--text-secondary)' }}>Subtotal</span>
@@ -178,7 +180,7 @@ export default function MessageBubble({ msg, onSend }: { msg: Message, onSend?: 
                 <span>Rs. {msg.invoiceData.deliveryFee?.toLocaleString()}</span>
               </div>
             </div>
-            
+
             <div className="flex justify-between pt-3 mt-3 border-t font-bold text-sm sm:text-base" style={{ borderColor: 'var(--border-default)' }}>
               <span>Grand Total</span>
               <span className="text-Kapruka-orange">Rs. {msg.invoiceData.total?.toLocaleString()}</span>

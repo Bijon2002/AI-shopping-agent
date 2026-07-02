@@ -5,6 +5,7 @@ export interface KaprukProduct {
   rating?: number;
   in_stock: boolean;
   image_url?: string;
+  images?: string[];
   category?: string;
   description?: string;
 }
@@ -27,6 +28,7 @@ export interface ChatSession {
   title: string;
   date: number;
   messages: Message[];
+  cart?: CartItem[];
 }
 
 export interface CartItem {

@@ -41,14 +41,15 @@ export default function LanguageSelector() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl"
+        style={{ background: 'var(--overlay)' }}
       >
         <motion.div
           initial={{ scale: 0.92, y: 15 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.92, y: 15 }}
-          className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] flex flex-col p-6 sm:p-8"
-          style={{ background: 'linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(9,9,11,0.95) 100%)' }}
+          className="relative w-full max-w-md overflow-hidden rounded-[2rem] flex flex-col p-6 sm:p-8 theme-t"
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}
         >
           {/* Ambient Glow */}
           <div className="absolute top-[-20%] left-[-20%] w-[200px] h-[200px] rounded-full bg-purple-500/10 blur-[60px] pointer-events-none" />
@@ -59,13 +60,13 @@ export default function LanguageSelector() {
 
           {/* Icon */}
           <div className="flex justify-center mb-6 mt-2">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-Kapruka-orange shadow-lg">
+            <div className="p-4 rounded-2xl text-Kapruka-orange shadow-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
               <Globe size={32} className="animate-pulse" />
             </div>
           </div>
 
           {/* Heading */}
-          <h2 className="text-center font-display text-lg sm:text-xl font-bold tracking-tight text-white mb-6">
+          <h2 className="text-center font-display text-lg sm:text-xl font-bold tracking-tight mb-6" style={{ color: 'var(--text-primary)' }}>
             {t.selectLanguagePrompt}
           </h2>
 
@@ -81,19 +82,23 @@ export default function LanguageSelector() {
                 <button
                   key={lang.id}
                   onClick={() => handleSelectLanguage(lang.id as Language)}
-                  className={`w-full p-4 rounded-xl border flex items-center justify-between text-left transition-all duration-300 ${
+                  className={`w-full p-4 rounded-xl flex items-center justify-between text-left transition-all duration-300 ${
                     active
-                      ? 'border-Kapruka-orange bg-Kapruka-orange/15 shadow-[0_0_15px_rgba(255,107,43,0.15)]'
-                      : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10'
+                      ? 'border-Kapruka-orange bg-Kapruka-orange/15 shadow-[0_0_15px_rgba(139,0,0,0.15)]'
+                      : 'hover:border-Kapruka-orange/20'
                   }`}
+                  style={{
+                    background: active ? undefined : 'var(--bg-elevated)',
+                    border: active ? undefined : '1px solid var(--border-default)',
+                  }}
                 >
                   <div>
-                    <div className="font-bold text-white text-sm sm:text-base">{lang.title}</div>
-                    <div className="text-[10px] text-white/50">{lang.sub}</div>
+                    <div className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{lang.title}</div>
+                    <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{lang.sub}</div>
                   </div>
                   <span className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${
-                    active ? 'bg-Kapruka-orange text-white' : 'bg-white/10 text-white/60'
-                  }`}>
+                    active ? 'bg-Kapruka-orange text-white' : ''
+                  }`} style={!active ? { background: 'var(--bg-surface)', color: 'var(--text-muted)' } : undefined}>
                     {lang.badge}
                   </span>
                 </button>

@@ -125,7 +125,8 @@ export const useStore = create<KadoStore>()(
             id: s.activeSessionId || Date.now().toString(),
             title: s.messages.find(m => m.role === 'user')?.text.slice(0, 30) + '...' || 'New Chat',
             date: Date.now(),
-            messages: [...s.messages]
+            messages: [...s.messages],
+            cart: [...s.cart]
           }
           
           const existingSessionIndex = s.sessions.findIndex(sess => sess.id === newSession.id)
@@ -140,10 +141,11 @@ export const useStore = create<KadoStore>()(
           return { 
             messages: [], 
             activeSessionId: null,
-            sessions: newSessions
+            sessions: newSessions,
+            cart: []
           }
         }
-        return { messages: [], activeSessionId: null }
+        return { messages: [], activeSessionId: null, cart: [] }
       }),
 
       sessions: [],
@@ -151,11 +153,33 @@ export const useStore = create<KadoStore>()(
       historyOpen: false,
       setHistoryOpen: (open) => set({ historyOpen: open }),
       loadSession: (id) => set((s) => {
-        const session = s.sessions.find(sess => sess.id === id)
-        if (session) {
-          return { messages: session.messages, activeSessionId: id, historyOpen: false }
+        // First save the current session if it has messages
+        const hasUserMessage = s.messages.some(m => m.role === 'user');
+        let currentSessions = [...s.sessions];
+        if (hasUserMessage && s.activeSessionId !== id) {
+           const currentSession: ChatSession = {
+              id: s.activeSessionId || Date.now().toString(),
+              title: s.messages.find(m => m.role === 'user')?.text.slice(0, 30) + '...' || 'New Chat',
+              date: Date.now(),
+              messages: [...s.messages],
+              cart: [...s.cart]
+           };
+           const idx = currentSessions.findIndex(sess => sess.id === currentSession.id);
+           if (idx >= 0) currentSessions[idx] = currentSession;
+           else currentSessions.push(currentSession);
         }
-        return s
+
+        const session = currentSessions.find(sess => sess.id === id)
+        if (session) {
+          return { 
+            messages: session.messages, 
+            activeSessionId: id, 
+            historyOpen: false,
+            cart: session.cart || [],
+            sessions: currentSessions
+          }
+        }
+        return { sessions: currentSessions }
       }),
       deleteSession: (id) => set((s) => ({
         sessions: s.sessions.filter(sess => sess.id !== id),

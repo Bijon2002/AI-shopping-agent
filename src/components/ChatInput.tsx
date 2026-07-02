@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, MicOff, ImagePlus, X } from 'lucide-react';
+import { Send, Mic, MicOff, ImagePlus, X, ShoppingCart } from 'lucide-react';
 
 import { useStore } from '../store';
 import { Headphones } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function ChatInput({
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { messages, voiceModeOpen, setVoiceModeOpen } = useStore();
+  const { messages, voiceModeOpen, setVoiceModeOpen, cart } = useStore();
   const alreadyHasImage = messages.some(m => m.image);
 
   const handleSend = (e: React.FormEvent) => {
@@ -137,6 +137,10 @@ export default function ChatInput({
     fileInputRef.current?.click();
   };
 
+  const lastAsstMsg = messages.filter(m => m.role === 'assistant').pop()?.text?.toLowerCase() || '';
+  const isCheckingOut = lastAsstMsg.includes('where should i send it') || lastAsstMsg.includes('delivery date') || lastAsstMsg.includes('proceed to checkout');
+  const disableCheckout = disabled || cart.length === 0 || isCheckingOut;
+
   return (
     <form onSubmit={handleSend}
       className={`flex-none px-3 sm:px-6 py-2.5 sm:py-4 max-w-2xl w-full mx-auto flex items-center gap-2 sm:gap-2.5 relative z-10 transition-all rounded-2xl border-2 border-transparent`}>
@@ -147,7 +151,7 @@ export default function ChatInput({
         className="flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl relative transition-all duration-300"
         style={voiceModeOpen
           ? { background: 'linear-gradient(135deg, #A855F7, #EC4899)', color: '#fff' }
-          : { background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }
+          : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }
         }>
         {voiceModeOpen && <span className="absolute inset-0 rounded-lg sm:rounded-xl bg-purple-500/20 animate-ping pointer-events-none" />}
         <Headphones size={16} />
@@ -159,7 +163,7 @@ export default function ChatInput({
         className="flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl relative transition-all duration-300"
         style={isListening
           ? { background: 'linear-gradient(135deg, #FF6B2B, #FF8F5C)', color: '#fff' }
-          : { background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }
+          : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }
         }>
         {isListening ? <MicOff size={16} /> : <Mic size={16} />}
         {isListening && (
@@ -176,13 +180,22 @@ export default function ChatInput({
         disabled={disabled}
         title="Upload Image"
         className={`flex-none p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-50 ${alreadyHasImage ? 'opacity-30' : ''}`}
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}>
+        style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }}>
         <ImagePlus size={16} />
+      </motion.button>
+
+      {/* Checkout Cart */}
+      <motion.button type="button" whileTap={{ scale: 0.9 }} onClick={() => onSend('checkout cart')}
+        disabled={disableCheckout}
+        title="Checkout Cart"
+        className={`flex-none px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-[12px] font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50 ${cart.length === 0 ? 'opacity-30' : ''}`}
+        style={{ background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', color: '#422a74' }}>
+        Cart Checkout
       </motion.button>
 
       {/* Input & Image Preview Wrapper */}
       <div className={`flex-1 flex flex-col relative rounded-lg sm:rounded-xl transition-all duration-300 ${isFocused ? 'input-glow' : ''}`}>
-        
+
         {/* Image Preview */}
         <AnimatePresence>
           {image && (
@@ -198,7 +211,7 @@ export default function ChatInput({
         {isFocused && (
           <div className="absolute inset-[-1px] rounded-lg sm:rounded-xl z-0"
             style={{
-              background: 'linear-gradient(135deg, #FF6B2B, #F5C518, #A855F7, #FF6B2B)',
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4), rgba(255,255,255,0.8))',
               backgroundSize: '300% 300%', animation: 'gradient-x 3s ease infinite', opacity: 0.6,
             }} />
         )}
@@ -207,10 +220,13 @@ export default function ChatInput({
           onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
           disabled={disabled}
           placeholder={disabled ? "Kapruka is thinking..." : "Ask Kapruka anything..."}
-          className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors"
+          className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors placeholder-white/70"
           style={{
-            backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)',
-            border: isFocused ? 'none' : '1px solid var(--border-default)',
+            backgroundColor: 'rgba(150, 150, 150, 0.2)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            color: '#ffffff',
+            border: isFocused ? '1px solid rgba(255,255,255,0.8)' : '1px solid rgba(255,255,255,0.4)',
           }}
         />
       </div>
@@ -220,10 +236,11 @@ export default function ChatInput({
         disabled={(!text.trim() && !image) || disabled}
         className="flex-none p-2.5 sm:p-3.5 rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-25 disabled:cursor-not-allowed shadow-lg"
         style={{
-          background: (text.trim() || image) ? 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' : 'var(--bg-surface)',
-          color: (text.trim() || image) ? '#fff' : 'var(--text-muted)',
-          boxShadow: (text.trim() || image) ? '0 8px 25px rgba(255,107,43,0.3)' : 'none',
-          border: (text.trim() || image) ? 'none' : '1px solid var(--border-default)',
+          background: '#ffffff',
+          backdropFilter: (text.trim() || image) ? 'none' : 'blur(8px)',
+          color: '#422a74',
+          boxShadow: (text.trim() || image) ? '0 8px 25px rgba(255,255,255,0.3)' : 'none',
+          border: 'none',
         }}>
         <Send size={16} />
       </motion.button>

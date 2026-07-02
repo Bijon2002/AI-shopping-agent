@@ -73,7 +73,8 @@ async function runSearch(q: string, opts: any): Promise<KaprukProduct[]> {
     name: p.name,
     price: p.price?.amount ?? 0,
     in_stock: p.in_stock ?? false,
-    image_url: p.image_url ?? undefined,
+    image_url: p.image_url ?? p.images?.[0] ?? undefined,
+    images: p.images ?? (p.image_url ? [p.image_url] : []),
     category: p.category?.name ?? undefined,
     description: p.summary ?? undefined,
     rating: p.rating ?? undefined,
@@ -133,6 +134,7 @@ export const getProduct = async (product_id: string) => {
     price: raw.price?.amount ?? 0,
     in_stock: raw.in_stock ?? false,
     image_url: raw.images?.[0] ?? undefined,
+    images: raw.images ?? [],
     category: raw.category?.name ?? undefined,
     description: raw.description ?? raw.summary ?? undefined,
   };

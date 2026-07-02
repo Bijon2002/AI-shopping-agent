@@ -34,14 +34,14 @@ export default function OrderTracker({ data }: { data: any }) {
       {/* Timeline */}
       <div className="py-2 pl-2 space-y-4 relative">
         <div className="absolute left-[15px] top-4 bottom-4 w-0.5 rounded-full" style={{ background: 'var(--border-default)' }} />
-        
+
         {steps.map((step: any, idx: number) => {
           const isLast = idx === steps.length - 1;
           return (
             <div key={idx} className="flex gap-4 relative z-10">
-              <div 
+              <div
                 className="w-7 h-7 rounded-full flex items-center justify-center flex-none mt-0.5"
-                style={{ 
+                style={{
                   background: isLast ? 'linear-gradient(135deg, #FF6B2B, #FF8F5C)' : 'var(--bg-elevated)',
                   color: isLast ? '#fff' : 'var(--text-muted)',
                   border: isLast ? 'none' : '1px solid var(--border-default)'

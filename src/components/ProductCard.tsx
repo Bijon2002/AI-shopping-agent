@@ -30,9 +30,7 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
   };
 
   const handleCardClick = () => {
-    if (onSend) {
-      onSend(`I like the ${product.name} (Product ID: ${product.id}).`);
-    }
+    setSelectedProductDetails(product);
   };
 
   return (
@@ -108,7 +106,12 @@ export default function ProductCard({ product, onSend }: { product: KaprukProduc
               e.stopPropagation();
               setSelectedProductDetails(product);
             }}
-            className="flex-none p-1.5 sm:p-2 rounded-lg text-[10px] font-bold border border-white/10 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-1 text-white"
+            className="flex-none p-1.5 sm:p-2 rounded-lg text-[10px] font-bold transition-colors flex items-center justify-center gap-1 theme-t"
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-secondary)',
+            }}
             title={t.viewDetails}
           >
             <Eye size={12} />

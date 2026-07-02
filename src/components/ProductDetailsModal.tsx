@@ -2,11 +2,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, Star, Tag, Info, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useStore } from '../store';
 import { translations } from '../lib/translations';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ProductDetailsModal() {
   const { language, selectedProductDetails, setSelectedProductDetails, addToCart } = useStore();
   const [added, setAdded] = useState(false);
+  const [currentImage, setCurrentImage] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (selectedProductDetails) {
+      setCurrentImage(selectedProductDetails.images?.[0] || selectedProductDetails.image_url);
+    }
+  }, [selectedProductDetails]);
 
   const t = translations[language] || translations.en;
 
@@ -26,7 +33,8 @@ export default function ProductDetailsModal() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl"
+        style={{ background: 'var(--overlay)' }}
         onClick={() => setSelectedProductDetails(null)}
       >
         <motion.div
@@ -34,8 +42,12 @@ export default function ProductDetailsModal() {
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.92, y: 15 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh]"
-          style={{ background: 'linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(9,9,11,0.95) 100%)' }}
+          className="relative w-full max-w-md overflow-hidden rounded-3xl flex flex-col max-h-[85vh] theme-t"
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-default)',
+            boxShadow: 'var(--shadow-lg)',
+          }}
         >
           {/* Top border gradient */}
           <div className="h-[3px] w-full bg-gradient-to-r from-purple-500 via-Kapruka-orange to-Kapruka-gold" />
@@ -43,7 +55,12 @@ export default function ProductDetailsModal() {
           {/* Close button */}
           <button
             onClick={() => setSelectedProductDetails(null)}
-            className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-black/40 border border-white/10 hover:bg-white/10 transition-colors text-white"
+            className="absolute top-4 right-4 z-10 p-2 rounded-xl transition-colors theme-t"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              color: 'var(--text-primary)',
+            }}
           >
             <X size={16} />
           </button>
@@ -51,63 +68,86 @@ export default function ProductDetailsModal() {
           {/* Content Wrapper */}
           <div className="overflow-y-auto custom-scrollbar flex-1">
             {/* Product Image */}
-            <div className="relative h-64 sm:h-72 w-full bg-black/40 border-b border-white/5">
-              {product.image_url ? (
+            <div className="relative h-52 sm:h-60 w-full" style={{ background: 'var(--bg-elevated)' }}>
+              {currentImage ? (
                 <img
-                  src={product.image_url}
+                  src={currentImage}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-7xl">
+                <div className="w-full h-full flex items-center justify-center text-6xl">
                   🎁
                 </div>
               )}
               {/* Category Badge */}
               {product.category && (
-                <div className="absolute bottom-4 left-4 glass rounded-full px-3 py-1 flex items-center gap-1.5 text-xs text-Kapruka-gold font-bold">
-                  <Tag size={12} />
+                <div className="absolute bottom-3 left-3 glass rounded-full px-2.5 py-1 flex items-center gap-1.5 text-[11px] text-Kapruka-gold font-bold">
+                  <Tag size={11} />
                   <span className="capitalize">{product.category}</span>
                 </div>
               )}
             </div>
 
+            {/* Thumbnail Gallery */}
+            {product.images && product.images.length > 1 && (
+              <div
+                className="flex gap-2 p-2.5 overflow-x-auto custom-scrollbar"
+                style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-default)' }}
+              >
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImage(img)}
+                    className={`w-12 h-12 flex-none rounded-lg overflow-hidden border-2 transition-all ${currentImage === img ? 'border-Kapruka-orange shadow-md' : 'opacity-50 hover:opacity-100'}`}
+                    style={{ borderColor: currentImage === img ? undefined : 'transparent' }}
+                  >
+                    <img src={img} alt="thumbnail" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Product Info */}
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-4 sm:p-5 space-y-4">
               <div>
-                <h2 className="font-display text-xl sm:text-2xl font-black tracking-tight text-white leading-snug">
+                <h2
+                  className="font-display text-lg sm:text-xl font-black tracking-tight leading-snug"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {product.name}
                 </h2>
                 
                 {/* Rating & Stock */}
-                <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-3 mt-2.5">
                   {product.rating && (
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          size={12}
+                          size={11}
                           className={
                             i < Math.round(product.rating!)
                               ? 'text-Kapruka-gold fill-Kapruka-gold'
-                              : 'text-white/10'
+                              : ''
                           }
+                          style={i >= Math.round(product.rating!) ? { color: 'var(--border-default)' } : undefined}
                         />
                       ))}
-                      <span className="text-xs text-white/50 ml-1">({product.rating})</span>
+                      <span className="text-[11px] ml-1" style={{ color: 'var(--text-muted)' }}>({product.rating})</span>
                     </div>
                   )}
 
-                  <span className="text-white/20">|</span>
+                  <span style={{ color: 'var(--border-default)' }}>|</span>
 
                   {product.in_stock ? (
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
-                      <CheckCircle2 size={14} />
+                    <div className="flex items-center gap-1.5 text-emerald-500 font-bold text-[11px]">
+                      <CheckCircle2 size={13} />
                       <span>{t.inStock}</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-red-400 font-bold text-xs">
-                      <AlertTriangle size={14} />
+                    <div className="flex items-center gap-1.5 text-red-500 font-bold text-[11px]">
+                      <AlertTriangle size={13} />
                       <span>{t.outOfStock}</span>
                     </div>
                   )}
@@ -115,54 +155,63 @@ export default function ProductDetailsModal() {
               </div>
 
               {/* Price Row */}
-              <div className="flex items-baseline justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <span className="text-xs text-white/40 uppercase font-bold tracking-wider">{t.price}</span>
-                <span className="text-xl sm:text-2xl font-extrabold text-Kapruka-gold font-display">
+              <div
+                className="flex items-baseline justify-between p-3.5 rounded-xl"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
+              >
+                <span className="text-[11px] uppercase font-bold tracking-wider" style={{ color: 'var(--text-muted)' }}>{t.price}</span>
+                <span className="text-lg sm:text-xl font-extrabold text-Kapruka-gold font-display">
                   LKR {product.price?.toLocaleString()}
                 </span>
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
-                <h3 className="text-xs uppercase font-bold tracking-wider text-white/50 flex items-center gap-1.5">
-                  <Info size={12} className="text-Kapruka-orange" />
+              <div className="space-y-1.5">
+                <h3 className="text-[11px] uppercase font-bold tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                  <Info size={11} className="text-Kapruka-orange" />
                   <span>{t.viewProductDetails}</span>
                 </h3>
-                <p className="text-xs sm:text-sm leading-relaxed text-white/70">
+                <p className="text-xs sm:text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   {product.description || "No description provided for this item. Talk to your AI Buddy if you have questions about custom configurations, gift packaging options, or local delivery speeds."}
                 </p>
               </div>
 
               {/* Available Stock Details */}
-              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.01] text-[11px] leading-relaxed text-white/40 space-y-1">
-                <div>📦 <strong className="text-white/70">Availability:</strong> {product.in_stock ? 'Highly Available' : 'Temporarily Out of Stock'}</div>
-                <div>📍 <strong className="text-white/70">Fulfillment:</strong> Direct dispatch from Kapruka Colombo Hub</div>
-                <div>🕒 <strong className="text-white/70">Same Day Delivery:</strong> Available for orders placed before 3:00 PM (Colombo only)</div>
+              <div
+                className="p-3 rounded-xl text-[10px] leading-relaxed space-y-1"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}
+              >
+                <div>📦 <strong style={{ color: 'var(--text-secondary)' }}>Availability:</strong> {product.in_stock ? 'Highly Available' : 'Temporarily Out of Stock'}</div>
+                <div>📍 <strong style={{ color: 'var(--text-secondary)' }}>Fulfillment:</strong> Direct dispatch from Kapruka Colombo Hub</div>
+                <div>🕒 <strong style={{ color: 'var(--text-secondary)' }}>Same Day Delivery:</strong> Available for orders placed before 3:00 PM (Colombo only)</div>
               </div>
             </div>
           </div>
 
           {/* Footer CTA */}
-          <div className="p-6 bg-black/40 border-t border-white/5 flex gap-4">
+          <div
+            className="p-4 flex gap-3"
+            style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-default)' }}
+          >
             <motion.button
-              whileHover={product.in_stock ? { scale: 1.02, boxShadow: '0 0 20px rgba(255,107,43,0.2)' } : {}}
+              whileHover={product.in_stock ? { scale: 1.02, boxShadow: '0 0 20px rgba(139,0,0,0.2)' } : {}}
               whileTap={product.in_stock ? { scale: 0.98 } : {}}
               onClick={handleAdd}
               disabled={!product.in_stock}
-              className={`flex-1 py-3.5 rounded-xl font-display font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${
+              className={`flex-1 py-3 rounded-xl font-display font-extrabold text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg transition-all ${
                 added
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
                   : 'btn-primary text-white disabled:opacity-30 disabled:cursor-not-allowed'
               }`}
             >
               {added ? (
                 <>
-                  <CheckCircle2 size={16} />
+                  <CheckCircle2 size={15} />
                   <span>{t.added}</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart size={16} />
+                  <ShoppingCart size={15} />
                   <span>{t.addToCart}</span>
                 </>
               )}

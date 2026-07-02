@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Sparkles, User } from 'lucide-react';
+import { ShoppingCart, Heart, Menu, Code, Globe, ImagePlus, Sparkles, User, Sun, Moon } from 'lucide-react';
 import MessageList from './MessageList';
 import VoiceMode from './VoiceMode';
 import ChatInput from './ChatInput';
@@ -36,7 +36,7 @@ export default function ChatShell() {
 
   const t = translations[language] || translations.en;
 
-  const { isDark } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [currentToolName, setCurrentToolName] = useState<string | null>(null);
   const [voiceOutput, setVoiceOutput] = useState(false);
@@ -277,11 +277,9 @@ Please remember to respond in the user's preferred language/dialect, and use the
           className="w-full h-full object-cover"
           src="/bg.mp4"
         />
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0" style={{
-          background: isDark
-            ? 'rgba(9,9,11,0.85)' // Slightly darker overlay to improve message readability over dynamic video background
-            : 'rgba(250,250,250,0.88)',
+        {/* Dark overlay for readability (dark mode only) */}
+        <div className="absolute inset-0 transition-colors duration-500" style={{
+          background: isDark ? 'rgba(9,9,11,0.55)' : 'transparent'
         }} />
       </div>
 
@@ -304,22 +302,22 @@ Please remember to respond in the user's preferred language/dialect, and use the
       )}
 
       {/* ═══ Header ═══ */}
-      <header className="flex-none px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between z-20 glass relative gradient-border-bottom">
+      <header className="flex-none px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between z-20 bg-transparent relative">
         <button
           onClick={() => { clearMessages(); setDetectedOccasion(null); }}
           className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity text-left cursor-pointer focus:outline-none"
         >
           <img src="/kado-logo.png" alt="Kapruka" className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl object-cover shadow-xl animate-glow" />
           <div>
-            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide gradient-text leading-none">{t.appTitle}</h1>
+            <h1 className="font-display font-extrabold text-sm sm:text-base tracking-wide text-[#fad804] leading-none">{t.appTitle}</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               {detectedOccasion ? (
                 <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-Kapruka-orange/15 text-Kapruka-orange border border-Kapruka-orange/20">
+                  className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-white text-black shadow-sm">
                   {detectedOccasion} Mode
                 </motion.span>
               ) : (
-                <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest hidden sm:inline" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-widest hidden sm:inline text-white">
                   {t.subtitle}
                 </span>
               )}
@@ -331,11 +329,10 @@ Please remember to respond in the user's preferred language/dialect, and use the
           {/* Language Switcher */}
           <button
             onClick={() => setShowLanguageSelector(true)}
-            className="px-2 py-1.5 sm:px-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+            className="px-2 py-1.5 sm:px-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider hover:opacity-80"
             style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: 'var(--text-muted)'
+              background: 'transparent',
+              color: 'var(--text-primary)'
             }}
             title={t.language}
           >
@@ -343,14 +340,14 @@ Please remember to respond in the user's preferred language/dialect, and use the
             <span>{language}</span>
           </button>
 
+
           {/* Profile / Saved Info Button */}
           <button
             onClick={() => setProfileOpen(true)}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t relative"
+            className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t relative hover:opacity-80 ${profileOpen ? 'text-Kapruka-orange' : ''}`}
             style={{
-              background: profileOpen ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: profileOpen ? 'var(--Kapruka-orange)' : 'var(--text-muted)'
+              background: 'transparent',
+              color: profileOpen ? 'var(--Kapruka-orange)' : 'var(--text-primary)'
             }}
             title={t.profile}
           >
@@ -358,24 +355,12 @@ Please remember to respond in the user's preferred language/dialect, and use the
           </button>
 
 
-          {/* TTS Toggle */}
-          <button onClick={() => setVoiceOutput(!voiceOutput)}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
-            style={{
-              background: voiceOutput ? 'rgba(255,107,43,0.1)' : 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: voiceOutput ? 'var(--Kapruka-orange)' : 'var(--text-muted)'
-            }}>
-            {voiceOutput ? <span title="Voice Output On">🔊</span> : <span title="Voice Output Off">🔈</span>}
-          </button>
-
           {/* Global Shop Toggle */}
           <button onClick={() => setGlobalShopMode(!globalShopMode)}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t"
+            className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 theme-t hover:opacity-80 ${globalShopMode ? 'text-blue-500' : ''}`}
             style={{
-              background: globalShopMode ? 'rgba(59,130,246,0.1)' : 'var(--bg-surface)',
-              border: '1px solid var(--border-default)',
-              color: globalShopMode ? '#3b82f6' : 'var(--text-muted)'
+              background: 'transparent',
+              color: globalShopMode ? '#3b82f6' : 'var(--text-primary)'
             }}
             title={globalShopMode ? "Global Shop Extension Active" : "Enable Global Shop Extension"}>
             <Globe size={16} />
@@ -384,8 +369,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
           {/* History / Menu */}
           <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
             onClick={() => setHistoryOpen(true)}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl theme-t"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-muted)' }}>
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl theme-t hover:opacity-80"
+            style={{ background: 'transparent', color: 'var(--text-primary)' }}>
             <Menu size={16} />
           </motion.button>
 
@@ -393,8 +378,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
           {wishlistCount > 0 && (
             <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }}
               onClick={() => setWishlistOpen(true)}
-              className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative theme-t"
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative theme-t hover:opacity-80"
+              style={{ background: 'transparent' }}>
               <Heart size={16} className="text-Kapruka-pink" fill="#FF6B7D" />
               <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center text-[8px] font-bold bg-Kapruka-pink text-white rounded-full">{wishlistCount}</span>
             </motion.button>
@@ -402,8 +387,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
 
           {/* Cart */}
           <button onClick={() => setCartOpen(true)}
-            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative flex items-center gap-1 sm:gap-1.5 transition-all duration-300 hover:scale-105 active:scale-95 theme-t"
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+            className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl relative flex items-center gap-1 sm:gap-1.5 transition-all duration-300 hover:scale-105 active:scale-95 theme-t hover:opacity-80"
+            style={{ background: 'transparent' }}>
             <ShoppingCart size={16} style={{ color: 'var(--text-primary)' }} />
             {cartCount > 0 && (
               <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -423,8 +408,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
           <ChatInput onSend={handleSendMessage} disabled={isLoading} image={uploadedImage} setImage={setUploadedImage} />
 
           <div className="text-center text-[10px] sm:text-xs pb-2 sm:pb-3 flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-            <Code size={12} className="text-Kapruka-orange opacity-80" />
-            <span>Developed by <a href="https://bijonn.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-Kapruka-orange hover:underline font-bold tracking-wide">BIJON</a></span>
+            <Code size={12} className="text-white opacity-80" />
+            <span>Developed by <a href="https://bijonn.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline font-bold tracking-wide">BIJON</a></span>
           </div>
         </main>
 
@@ -465,14 +450,15 @@ Please remember to respond in the user's preferred language/dialect, and use the
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xl"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl"
+            style={{ background: 'var(--overlay)' }}
           >
             <motion.div 
               initial={{ scale: 0.92, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 15 }}
-              className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh]"
-              style={{ background: 'linear-gradient(180deg, rgba(24,24,27,0.9) 0%, rgba(9,9,11,0.95) 100%)' }}
+              className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] flex flex-col max-h-[90vh] theme-t"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)' }}
             >
               {/* Background ambient glow inside the card */}
               <div className="absolute top-[-20%] left-[-20%] w-[300px] h-[300px] rounded-full bg-purple-500/10 blur-[80px] pointer-events-none" />
@@ -489,14 +475,14 @@ Please remember to respond in the user's preferred language/dialect, and use the
                       <Sparkles size={26} className="animate-pulse" />
                     </div>
                     <div>
-                      <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+                      <h2 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight" style={{ color: 'var(--text-primary)' }}>
                         Kapruka AI Buddy
                       </h2>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-purple-500/25 text-purple-300 border border-purple-500/20">
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-purple-500/25 text-purple-500 border border-purple-500/20">
                           v1.2 Live
                         </span>
-                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-Kapruka-orange/20 text-orange-300 border border-Kapruka-orange/20">
+                        <span className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md bg-Kapruka-orange/20 text-Kapruka-orange border border-Kapruka-orange/20">
                           100% Conversational
                         </span>
                       </div>
@@ -504,15 +490,15 @@ Please remember to respond in the user's preferred language/dialect, and use the
                   </div>
                   
                   {/* Verified Developer Badge */}
-                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-white/5 bg-white/5 w-fit shadow-inner">
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-full w-fit shadow-inner" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                    <span className="text-[10px] font-bold tracking-wider text-white/70 uppercase">
-                      Developer: <span className="text-Kapruka-orange font-black">BIJON</span>
+                    <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: 'var(--text-muted)' }}>
+                      Developer: <span className="text-white font-black">BIJON</span>
                     </span>
                   </div>
                 </div>
 
-                <p className="text-sm leading-relaxed mb-6 text-white/70">
+                <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
                   {language === 'si'
                     ? 'අනේ මචං! ඔයාගේ සජීවී ශ්‍රී ලාංකික සාප්පු සවාරි සහකරු වෙත සාදරයෙන් පිළිගනිමු. මට සිංහල/Singlish, දෙමළ/Tanglish, හෝ ඉංග්‍රීසි කතා කරන්න පුළුවන්. මෙන්න මම ඔබ වෙනුවෙන්ම සූදානම් කර ඇති සුවිශේෂී පහසුකම්:'
                     : language === 'ta'
@@ -523,85 +509,85 @@ Please remember to respond in the user's preferred language/dialect, and use the
                 {/* Features Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   {/* Feature 1 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
-                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-purple-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-purple-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">🎙️</span>
-                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Gemini Live Voice Mode</span>
+                      <span className="text-sm font-black group-hover:text-purple-400 transition-colors">Gemini Live Voice Mode</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Native bidirectional real-time conversation. Talk freely, and I will respond instantly via audio with responsive visualizers.
                     </p>
                   </div>
 
                   {/* Feature 2 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
-                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-orange-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-orange-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">🍰</span>
-                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Smart Product Search</span>
+                      <span className="text-sm font-black group-hover:text-orange-400 transition-colors">Smart Product Search</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Query Kapruka cakes, rose bouquets, Java chocolates, teddy bears, grocery packs, and cards using intelligent occasion filtering.
                     </p>
                   </div>
 
                   {/* Feature 3 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
-                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-purple-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-purple-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">🇱🇰</span>
-                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Multilingual Mirroring</span>
+                      <span className="text-sm font-black group-hover:text-purple-400 transition-colors">Multilingual Mirroring</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Built to respond in the exact language/dialect you write. Full support for Singlish and Tanglish with local slang.
                     </p>
                   </div>
 
                   {/* Feature 4 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
-                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-orange-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-orange-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">📦</span>
-                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Frictionless Checkout</span>
+                      <span className="text-sm font-black group-hover:text-orange-400 transition-colors">Frictionless Checkout</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Complete guest checkout in under 2 minutes: select city, verify date, add recipient details, and generate invoice paylinks.
                     </p>
                   </div>
 
                   {/* Feature 5 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-purple-500/25 group text-left">
-                    <div className="text-purple-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-purple-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-purple-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">✈️</span>
-                      <span className="text-sm font-black group-hover:text-purple-300 transition-colors">Amazon & eBay Extension</span>
+                      <span className="text-sm font-black group-hover:text-purple-400 transition-colors">Amazon & eBay Extension</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Paste global shopping links directly into chat to automatically estimate total landed shipping cost to Sri Lanka.
                     </p>
                   </div>
 
                   {/* Feature 6 */}
-                  <div className="p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-orange-500/25 group text-left">
-                    <div className="text-orange-400 mb-2 font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl transition-all hover:border-orange-500/25 group text-left" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
+                    <div className="text-orange-500 mb-2 font-bold flex items-center gap-2">
                       <span className="text-lg">🖼️</span>
-                      <span className="text-sm font-black group-hover:text-orange-300 transition-colors">Vision Search (1 Limit)</span>
+                      <span className="text-sm font-black group-hover:text-orange-400 transition-colors">Vision Search (1 Limit)</span>
                     </div>
-                    <p className="text-[11px] leading-normal text-white/50">
+                    <p className="text-[11px] leading-normal" style={{ color: 'var(--text-muted)' }}>
                       Upload an image, and I will scan for visually matching items. Restricted to exactly 1 image upload per chat session.
                     </p>
                   </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-auto border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-                  <div className="text-[10px] text-white/40 leading-relaxed max-w-xs text-center sm:text-left">
+                <div className="mt-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-6" style={{ borderTop: '1px solid var(--border-default)' }}>
+                  <div className="text-[10px] leading-relaxed max-w-xs text-center sm:text-left" style={{ color: 'var(--text-muted)' }}>
                     By clicking continue, you agree to allow browser microphone access for Live Voice Mode.
                   </div>
                   <motion.button
-                    whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(255,107,43,0.3)' }}
+                    whileHover={{ scale: 1.04, boxShadow: '0 0 30px rgba(139,0,0,0.3)' }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => {
                       localStorage.setItem('kado-info-dismissed', 'true');
                       setShowInfoModal(false);
                     }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-Kapruka-orange via-orange-500 to-amber-500 text-white font-black text-sm shadow-[0_8px_30px_rgba(255,107,43,0.35)] cursor-pointer tracking-wider"
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-Kapruka-orange via-orange-500 to-amber-500 text-white font-black text-sm shadow-[0_8px_30px_rgba(139,0,0,0.35)] cursor-pointer tracking-wider"
                   >
                     {language === 'si' ? 'හරි, සාප්පු සවාරි යමු!' : language === 'ta' ? 'சரி, வாங்கலாம்!' : "OK, Let's Shop!"}
                   </motion.button>

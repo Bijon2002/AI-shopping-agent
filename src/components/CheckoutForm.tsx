@@ -44,7 +44,7 @@ export default function CheckoutForm({
         } else if (Array.isArray(res)) {
           setCitySuggestions(res.slice(0, 5));
         }
-      } catch {}
+      } catch { }
       setSearchingCities(false);
     }, 300);
     return () => clearTimeout(timer);
