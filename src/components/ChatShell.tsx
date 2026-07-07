@@ -63,7 +63,7 @@ export default function ChatShell() {
       let { width, height } = img;
       const MAX_SIZE = 1500;
       if (width > MAX_SIZE || height > MAX_SIZE) {
-        if (width > height) { height *= MAX_SIZE / width; width = MAX_SIZE; } 
+        if (width > height) { height *= MAX_SIZE / width; width = MAX_SIZE; }
         else { width *= MAX_SIZE / height; height = MAX_SIZE; }
       }
       canvas.width = width; canvas.height = height;
@@ -130,7 +130,7 @@ export default function ChatShell() {
       if (m.image) {
         const supportedFormats = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         const isSupported = supportedFormats.some(fmt => m.image?.startsWith(`data:${fmt}`));
-        
+
         if (isSupported) {
           return {
             role: m.role,
@@ -197,10 +197,10 @@ Please remember to respond in the user's preferred language/dialect, and use the
           }
           updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined);
         },
-        (products) => { 
+        (products) => {
           const newProducts = products.filter((p: any) => !accProducts.some(ap => ap.id === p.id));
           accProducts = [...accProducts, ...newProducts];
-          updateLastAssistant(acc, accProducts); 
+          updateLastAssistant(acc, accProducts);
         },
         (payUrl) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, payUrl); },
         (orderNo) => { updateLastAssistant(acc, accProducts.length > 0 ? accProducts : undefined, undefined, orderNo); },
@@ -237,11 +237,11 @@ Please remember to respond in the user's preferred language/dialect, and use the
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'GLOBAL_SHOP_IMPORT') {
         const { productTitle, productUrl, price, image } = event.data.payload || {};
-        
+
         setGlobalShopMode(true);
-        
+
         const prompt = `[GLOBAL SHOP IMPORT]\nI found this item on another website and want to buy it via Kapruka Global Shop:\nTitle: ${productTitle || 'Unknown Product'}\nURL: ${productUrl || ''}\nPrice: ${price || 'Unknown'}\n\nPlease help me calculate the total landed cost to Sri Lanka and guide me through ordering it.`;
-        
+
         // Execute the prompt simulating the user
         setTimeout(() => {
           handleSendMessage(prompt, image);
@@ -253,8 +253,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
   }, [globalShopMode, messages, isLoading, currentToolName, voiceOutput]); // Include dependencies of handleSendMessage
 
   return (
-    <div 
-      className="h-full w-full flex flex-col relative overflow-hidden" 
+    <div
+      className="h-full w-full flex flex-col relative overflow-hidden"
       style={{ background: 'var(--bg-base)' }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -400,6 +400,20 @@ Please remember to respond in the user's preferred language/dialect, and use the
         </div>
       </header>
 
+      {/* Sarcastic Hint Section */}
+      <div className="absolute top-[56px] right-3 sm:right-5 z-30 max-w-[240px] sm:max-w-[260px] p-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/15 shadow-2xl">
+        <p className="text-[9px] sm:text-[10px] leading-[1.6] text-white/90 text-center">
+          <span className="font-bold text-yellow-400 block mb-1 text-[10px] sm:text-[11px]">⚠️ Survival Guide</span>
+          AI went brain-dead? Type <span className="font-bold text-white">"?"</span> because the genius developer couldn't make it stable.
+          <br />
+          This runs on a free API because BIJON was too broke to pay for a real one. When it dies (and it will), beg here:
+        </p>
+        <p className="text-center mt-1.5">
+          <a href="mailto:bijonbijosilin@gmail.com" className="inline-block text-[10px] sm:text-[11px] font-bold text-yellow-400 underline underline-offset-2 break-all">bijonbijosilin@gmail.com</a>
+        </p>
+        <p className="text-[9px] sm:text-[10px] text-white/70 text-center mt-1">He'll fix it... eventually. Maybe. Don't hold your breath.</p>
+      </div>
+
       {/* ═══ Main Container ═══ */}
       <div className="flex-1 flex w-full overflow-hidden relative z-10">
         {/* Chat Area */}
@@ -416,7 +430,7 @@ Please remember to respond in the user's preferred language/dialect, and use the
         {/* Desktop Voice Mode Sidebar */}
         <AnimatePresence>
           {voiceModeOpen && (
-            <motion.div 
+            <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 360, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
@@ -446,14 +460,14 @@ Please remember to respond in the user's preferred language/dialect, and use the
 
         {/* ═══ Info Modal ═══ */}
         {showInfoModal && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl"
             style={{ background: 'var(--overlay)' }}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.92, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 15 }}
@@ -488,7 +502,7 @@ Please remember to respond in the user's preferred language/dialect, and use the
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Verified Developer Badge */}
                   <div className="flex items-center gap-2 px-3.5 py-2 rounded-full w-fit shadow-inner" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -502,8 +516,8 @@ Please remember to respond in the user's preferred language/dialect, and use the
                   {language === 'si'
                     ? 'අනේ මචං! ඔයාගේ සජීවී ශ්‍රී ලාංකික සාප්පු සවාරි සහකරු වෙත සාදරයෙන් පිළිගනිමු. මට සිංහල/Singlish, දෙමළ/Tanglish, හෝ ඉංග්‍රීසි කතා කරන්න පුළුවන්. මෙන්න මම ඔබ වෙනුවෙන්ම සූදානම් කර ඇති සුවිශේෂී පහසුකම්:'
                     : language === 'ta'
-                    ? 'அனே மச்சான்! உங்களது நிகழ்நேர இலங்கை ஷாப்பிங் துணணக்கு வரவேற்கிறோம். நான் சிங்களம்/சிங்கிலிஷ், தமிழ்/தமிழிலிஷ் அல்லது ஆங்கிலம் பேசக்கூடியவன். உங்களுக்காக நான் உருவாக்கிய சில அம்சங்கள் இதோ:'
-                    : 'Aney machang! Welcome to your real-time Sri Lankan shopping companion. I can speak Sinhala/Singlish, Tamil/Tanglish, or English. Here are all the powerful features I have built in for you:'}
+                      ? 'அனே மச்சான்! உங்களது நிகழ்நேர இலங்கை ஷாப்பிங் துணணக்கு வரவேற்கிறோம். நான் சிங்களம்/சிங்கிலிஷ், தமிழ்/தமிழிலிஷ் அல்லது ஆங்கிலம் பேசக்கூடியவன். உங்களுக்காக நான் உருவாக்கிய சில அம்சங்கள் இதோ:'
+                      : 'Aney machang! Welcome to your real-time Sri Lankan shopping companion. I can speak Sinhala/Singlish, Tamil/Tanglish, or English. Here are all the powerful features I have built in for you:'}
                 </p>
 
                 {/* Features Grid */}

@@ -211,13 +211,13 @@ export default function ChatInput({
           onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
           disabled={disabled}
           placeholder={disabled ? "Kapruka is thinking..." : "Ask Kapruka anything..."}
-          className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors placeholder-white/70"
+          className="w-full px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg sm:rounded-xl text-[13px] sm:text-sm focus:outline-none relative z-10 transition-colors placeholder-black/70"
           style={{
-            backgroundColor: 'rgba(150, 150, 150, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            color: '#ffffff',
-            border: isFocused ? '1px solid rgba(255,255,255,0.8)' : '1px solid rgba(255,255,255,0.4)',
+            color: '#000000',
+            border: isFocused ? '1px solid rgba(0,0,0,0.5)' : '1px solid rgba(0,0,0,0.2)',
           }}
         />
       </div>
