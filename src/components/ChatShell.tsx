@@ -42,6 +42,12 @@ export default function ChatShell() {
   const [voiceOutput] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isGlobalDragging, setIsGlobalDragging] = useState(false);
+  const [hintClosed, setHintClosed] = useState(false);
+
+  // Reset hint every new chat
+  useEffect(() => {
+    if (messages.length === 0) setHintClosed(false);
+  }, [messages.length]);
 
   useEffect(() => {
     const dismissed = localStorage.getItem('kado-info-dismissed');
@@ -401,18 +407,25 @@ Please remember to respond in the user's preferred language/dialect, and use the
       </header>
 
       {/* Sarcastic Hint Section */}
-      <div className="absolute top-[56px] right-3 sm:right-5 z-30 max-w-[240px] sm:max-w-[260px] p-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/15 shadow-2xl">
-        <p className="text-[9px] sm:text-[10px] leading-[1.6] text-white/90 text-center">
-          <span className="font-bold text-yellow-400 block mb-1 text-[10px] sm:text-[11px]">⚠️ Survival Guide</span>
-          AI went brain-dead? Type <span className="font-bold text-white">"?"</span> because the genius developer couldn't make it stable.
-          <br />
-          This runs on a free API because BIJON was too broke to pay for a real one. When it dies (and it will), beg here:
-        </p>
-        <p className="text-center mt-1.5">
-          <a href="mailto:bijonbijosilin@gmail.com" className="inline-block text-[10px] sm:text-[11px] font-bold text-yellow-400 underline underline-offset-2 break-all">bijonbijosilin@gmail.com</a>
-        </p>
-        <p className="text-[9px] sm:text-[10px] text-white/70 text-center mt-1">He'll fix it... eventually. Maybe. Don't hold your breath.</p>
-      </div>
+      {!hintClosed && (
+        <div className="absolute top-[56px] right-3 sm:right-5 z-30 max-w-[240px] sm:max-w-[260px] p-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/15 shadow-2xl">
+          <button
+            onClick={() => setHintClosed(true)}
+            className="absolute top-1.5 right-2 text-white/50 hover:text-white text-sm font-bold leading-none"
+            aria-label="Close hint"
+          >✕</button>
+          <p className="text-[9px] sm:text-[10px] leading-[1.6] text-white/90 text-center pr-3">
+            <span className="font-bold text-yellow-400 block mb-1 text-[10px] sm:text-[11px]">⚠️ Survival Guide</span>
+            AI went brain-dead? Type <span className="font-bold text-white">"?"</span> because the genius developer couldn't make it stable.
+            <br />
+            This runs on a free API because BIJON was too broke to pay for a real one. When it dies (and it will), beg here:
+          </p>
+          <p className="text-center mt-1.5">
+            <a href="mailto:bijonbijosilin@gmail.com" className="inline-block text-[10px] sm:text-[11px] font-bold text-yellow-400 underline underline-offset-2 break-all">bijonbijosilin@gmail.com</a>
+          </p>
+          <p className="text-[9px] sm:text-[10px] text-white/70 text-center mt-1">He'll fix it... eventually. Maybe. Don't hold your breath.</p>
+        </div>
+      )}
 
       {/* ═══ Main Container ═══ */}
       <div className="flex-1 flex w-full overflow-hidden relative z-10">
